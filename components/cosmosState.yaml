@@ -1,0 +1,23 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: cosmosState
+spec:
+  type: state.azure.cosmosdb
+  version: v1
+  metadata:
+  - name: url
+    secretKeyRef:
+      name: cxns:cosmosDb
+      key: cxns:cosmosDb
+  - name: masterKey
+    secretKeyRef:
+      name: keys:cosmosDb
+      key: keys:cosmosDb
+  - name: database
+    value: photodb
+  - name: collection
+    value: photos
+
+auth:
+  secretStore: secretStore

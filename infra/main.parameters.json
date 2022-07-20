@@ -1,0 +1,63 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vNets": {
+            "value": [
+                {
+                    "name": "hub-vnet",
+                    "addressPrefixes": [
+                        "10.2.0.0/16"
+                    ],
+                    "subnets": [
+                        {
+                            "name": "AzureFirewallSubnet",
+                            "addressPrefix": "10.2.0.0/24",
+                            "nsgName": null,
+                            "udrName": null,
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled",
+                            "serviceEndpoints": null,
+                            "delegations": null
+                        }
+                    ]
+                },
+                {
+                    "name": "spoke-vnet",
+                    "addressPrefixes": [
+                        "10.3.0.0/16"
+                    ],
+                    "subnets": [
+                        {
+                            "name": "AzureContainerAppsRuntimeSubnet",
+                            "addressPrefix": "10.3.0.0/23",
+                            "udrName": "default-firewall",
+                            "nsgName": null,
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled",
+                            "serviceEndpoints": null,
+                            "delegations": null
+                        },
+                        {
+                            "name": "AzureContainerAppsInfraSubnet",
+                            "addressPrefix": "10.3.2.0/23",
+                            "udrName": null,
+                            "nsgName": null,
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled",
+                            "serviceEndpoints": null,
+                            "delegations": null
+                        }
+                    ]
+                }
+            ]
+        },
+        "tags": {
+            "value": {
+                "environment": "dev",
+                "costCenter": "123456789",
+                "dept": "it"
+            }
+        }
+    }
+}

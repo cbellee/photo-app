@@ -1,0 +1,25 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: imagesBinding
+spec:
+  type: bindings.azure.blobstorage
+  version: v1
+  metadata:
+  - name: storageAccount
+    secretKeyRef:
+      name: cxns:storage
+      key: cxns:storage
+  - name: storageAccessKey
+    secretKeyRef:
+      name: keys:storage
+      key: keys:storage
+  - name: container
+    value: images
+  - name: decodeBase64
+    value: false
+  - name: getBlobRetryCount
+    value: 5
+
+auth:
+  secretStore: secretStore
