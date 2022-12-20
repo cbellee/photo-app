@@ -1,0 +1,23 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: uploadsQueue
+spec:
+  type: bindings.azure.storagequeues
+  version: v1
+  metadata:
+  - name: storageAccount
+    secretKeyRef:
+      name: cxns:storage
+      key: cxns:storage
+  - name: storageAccessKey
+    secretKeyRef:
+      name: keys:storage
+      key: keys:storage
+  - name: queue
+    value: uploads
+  - name: decodeBase64
+    value: "false"
+
+auth:
+  secretStore: secretStore
