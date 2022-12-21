@@ -14,7 +14,10 @@ import (
 	"models"
 	"net"
 	"os"
+	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
 	dapr "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
 	"golang.org/x/image/draw"
@@ -138,4 +141,110 @@ func GetLargeBlob(ctx context.Context, bindingName string, blobName string, maxR
 	}
 
 	return out, nil
+}
+
+func GetBlobDirectories(containerClient *container.Client, ctx context.Context, opt container.ListBlobsHierarchyOptions, m map[string][]string) map[string][]string {
+	pager := containerClient.NewListBlobsHierarchyPager("/", &opt)
+
+	for pager.More() {
+		resp, err := pager.NextPage(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		segment := resp.Segment
+		if segment.BlobPrefixes != nil {
+			for _, prefix := range segment.BlobPrefixes {
+				str := strings.Split(strings.Trim(*prefix.Name, "/"), "/")
+				if len(str) > 1 {
+					m[str[0]] = append(m[str[0]], strings.Trim(str[1], "/"))
+				}
+
+				opt := container.ListBlobsHierarchyOptions{
+					Prefix: prefix.Name,
+				}
+				GetBlobDirectories(containerClient, ctx, opt, m)
+			}
+		}
+	}
+	return m
+}
+
+func GetBlobTags(blobClient *azblob.Client, containerName string, ctx context.Context) map[string][]string {
+	pager := blobClient.NewListBlobsFlatPager(containerName, &azblob.ListBlobsFlatOptions{
+		Include: container.ListBlobsInclude{
+			Deleted:  false,
+			Versions: false,
+			Metadata: true,
+			Tags:     true,
+		},
+	})
+
+	blobTagMap := make(map[string][]string)
+
+	for pager.More() {
+		resp, err := pager.NextPage(ctx)
+		if err != nil {
+			log.Fatalf("error occurred during blob listing: %s", err)
+			break
+		}
+
+		for _, _blob := range resp.Segment.BlobItems {
+			tags := *_blob.BlobTags
+			album := ""
+			collection := ""
+
+			for _, t := range tags.BlobTagSet {
+				if *t.Key == "collection" {
+					collection = *t.Value
+				}
+
+				if *t.Key == "album" {
+					album = *t.Value
+				}
+			}
+
+			if !Contains(blobTagMap[collection], album) {
+				blobTagMap[collection] = append(blobTagMap[collection], album)
+			}
+		}
+	}
+	return blobTagMap
+}
+
+func GetBlobMetadata(blobClient *azblob.Client, containerName string, ctx context.Context) map[string][]string {
+	pager := blobClient.NewListBlobsFlatPager(containerName, &azblob.ListBlobsFlatOptions{
+		Include: container.ListBlobsInclude{
+			Deleted:  false,
+			Versions: false,
+			Metadata: true,
+			Tags:     true,
+		},
+	})
+
+	metadataMap := make(map[string][]string)
+
+	for pager.More() {
+		resp, err := pager.NextPage(ctx)
+		if err != nil {
+			log.Fatalf("error occurred during blob listing: %s", err)
+			break
+		}
+
+		for _, _blob := range resp.Segment.BlobItems {
+			if !Contains(metadataMap[*_blob.Metadata["collection"]], *_blob.Metadata["album"]) {
+				metadataMap[*_blob.Metadata["collection"]] = append(metadataMap[*_blob.Metadata["collection"]], *_blob.Metadata["album"])
+			}
+		}
+	}
+	return metadataMap
+}
+
+func Contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }

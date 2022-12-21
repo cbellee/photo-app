@@ -128,7 +128,60 @@ az storage blob delete-batch --account-name $STORAGE_ACCOUNT_NAME -s thumbs
 az storage blob delete-batch --account-name $STORAGE_ACCOUNT_NAME -s uploads
 az storage blob delete-batch --account-name $STORAGE_ACCOUNT_NAME -s images
 
-# uplod images
+# upload images and add metadata & index tags
+
+for f in ../images/nature/*; 
+do 
+fileName=$(basename ${f})
+az storage blob upload \
+--account-name "$STORAGE_ACCOUNT_NAME" \
+--file "$f" \
+--container-name uploads \
+--metadata collection=2022 album=nature \
+--tags collection=2022 album=nature \
+--name "2022/nature/$fileName"; 
+done
+
+for f in ../images/sport/*;
+do 
+fileName=$(basename ${f})
+az storage blob upload \
+--account-name "$STORAGE_ACCOUNT_NAME" \
+--file "$f" \
+--container-name uploads \
+--metadata collection=2022 album=sport \
+--tags collection=2022 album=sport \
+--name "2022/sport/$fileName"; 
+done
+
+for f in ../images/soccer/*; 
+do 
+fileName=$(basename ${f})
+az storage blob upload \
+--account-name "$STORAGE_ACCOUNT_NAME" \
+--file "$f" \
+--container-name uploads \
+--metadata collection=2022 album=soccer \
+--tags collection=2022 album=soccer \
+--name "2022/soccer/$fileName"; 
+done
+
+for f in ../images/school/*; 
+do 
+fileName=$(basename ${f})
+az storage blob upload \
+--account-name "$STORAGE_ACCOUNT_NAME" \
+--file $f \
+--container-name uploads \
+--metadata collection=1979 album=school \
+--tags collection=1979 album=school \
+--name "1979/school/$fileName"; 
+done
+
+
+###############################
+
+':
 az storage blob upload-batch \
 --account-name $STORAGE_ACCOUNT_NAME \
 -d uploads \
@@ -160,7 +213,7 @@ az storage blob upload-batch \
 --destination-path "1979/school" \
 --metadata collection=1979 album=school \
 --overwrite
-
+'
 
 # /queryPhotos
 sleep -s 30
