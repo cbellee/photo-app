@@ -18,6 +18,21 @@ type DbConfig struct {
 	DbContainer string
 }
 
+type StorageConfig struct {
+	StorgeURL        string
+	StorageAccount   string
+	StorageKey       string
+	StorageContainer string
+}
+
+type Blob struct {
+	Name     string
+	Prefix   string
+	Data     string
+	Tags     map[string]string
+	MetaData map[string]string
+}
+
 type CosmosDocument struct {
 	Attachments  string `json:"_attachments"`
 	ETag         string `json:"_etag"`

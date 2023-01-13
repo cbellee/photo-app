@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
 	dapr "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
@@ -108,7 +109,9 @@ func GetEnvValue(key, fallback string) string {
 	return fallback
 }
 
-func GetLargeBlob(ctx context.Context, bindingName string, blobName string, maxRequestBodySize int) (out *dapr.BindingEvent, err error) {
+
+
+func GetBlob(ctx context.Context, bindingName string, blobName string, maxRequestBodySize int) (out *dapr.BindingEvent, err error) {
 	headerBuffer := 1
 	var opts []grpc.CallOption
 	opts = append(opts, grpc.MaxCallRecvMsgSize((maxRequestBodySize+headerBuffer)*1024*1024))

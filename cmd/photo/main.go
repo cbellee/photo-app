@@ -10,8 +10,11 @@ import (
 	"models"
 	"net/url"
 	"os"
+	"utils"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/http"
 )
@@ -27,7 +30,6 @@ var (
 	Error   *log.Logger
 )
 
-
 var dbConfig = models.DbConfig{
 	DbURL:       os.Getenv("COSMOS_URL"),
 	DbName:      os.Getenv("COSMOS_DB"),
@@ -35,6 +37,9 @@ var dbConfig = models.DbConfig{
 	DbContainer: os.Getenv("COSMOS_CONTAINER"),
 }
 
+var storageConfig = models.StorageConfig{
+	StorgeURL: ,
+}
 
 func Init(
 	traceHandle io.Writer,
@@ -80,12 +85,7 @@ func main() {
 	}
 
 	// add invocation handler
-	if err := s.AddServiceInvocationHandler("/collections", getCollections); err != nil {
-		Error.Printf("%s: error adding service invocation handler: %v", serviceName, err)
-	}
-
-	// add invocation handler
-	if err := s.AddServiceInvocationHandler("/albums", getAlbums); err != nil {
+	if err := s.AddServiceInvocationHandler("/collections", getCollectionAlbumTags); err != nil {
 		Error.Printf("%s: error adding service invocation handler: %v", serviceName, err)
 	}
 
@@ -94,7 +94,13 @@ func main() {
 		Error.Printf("%s: server failed to start: %v", serviceName, err)
 	}
 
-	Info.Printf("%s listening on port %s",serviceName, port)
+	Info.Printf("%s listening on port %s", serviceName, port)
+}
+
+func getCollectionAlbumTags(ctx context.Context, in *common.InvocationEvent) (out *common.Content, err error) {
+	Info.Printf("%s - ContentType:%s, Verb:%s, QueryString:%s, Data:%+v", serviceName, in.ContentType, in.Verb, in.QueryString, string(in.Data))
+	
+	utils.GetBlobMetadata(&azblob.Client{}, containerName)
 }
 
 func getCollections(ctx context.Context, in *common.InvocationEvent) (out *common.Content, err error) {

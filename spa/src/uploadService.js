@@ -1,22 +1,64 @@
-import { apiConfig } from "./authConfig";
+import { apiConfig, msalConfig } from "./authConfig";
+import { InteractiveBrowserCredential } from "@azure/identity"
+import { BlockBlobClient } from "@azure/storage-blob"
+import Resizer from "react-image-file-resizer";
 
-/**
- * Attaches a given access token to a MS Graph API call. Returns information about the user
- * @param accessToken 
- */
+var signInOptions = {
+    clientId: msalConfig.auth.clientId,
+    tenantId: apiConfig.tenantId
+}
 
-export async function upload(accessToken) {
-    const headers = new Headers();
-    const bearer = `Bearer ${accessToken}`;
+var browserCredential = new InteractiveBrowserCredential(signInOptions);
 
-    headers.append("Authorization", bearer);
+const resizeFile = (file, maxWidth, maxHeight, format, quality, rotation) =>
+    new Promise((resolve) => {
+        Resizer.imageFileResizer(
+            file,
+            maxWidth,
+            maxHeight,
+            format,
+            quality,
+            rotation,
+            (uri) => {
+                resolve(uri);
+            },
+            "blob"
+        );
+    });
 
-    const options = {
-        method: "POST",
-        headers: headers,
-    };
+export async function uploadAndSetTags(containerName, files, album, collection) {
+    if (files.length > 0) {
+        files.forEach(async (file) => {
+            var imageUrl = apiConfig.storageApiEndpoint + "/" + containerName + "/" + collection + "/" + album + "/" + file.file.name
+            var thumbUrl = apiConfig.storageApiEndpoint + "/" + containerName + "/" + collection + "/" + album + "/" + "thumbs" + "/" + file.file.name
 
-    return fetch(apiConfig.uploadApiEndpoint, options)
-        .then(response => response.json())
-        .catch(error => console.log(error));
+            var tags = {
+                collection: collection,
+                album: album,
+                name: file.file.name,
+                size: String(file.file.size),
+                url: imageUrl,
+                thumb_url: thumbUrl
+            }
+
+            var metadata = {
+                exifData: file.exif
+            }
+
+            // create & upload thumbnail
+            const thumb = await resizeFile(file.file, 300, 300, "JPEG", 50, 0);
+            let thumbFile = new File([thumb], file.file.name)
+            let imageBlockClient = new BlockBlobClient(thumbUrl, browserCredential);
+            await imageBlockClient.upload(thumbFile, thumbFile.size);
+            await imageBlockClient.setTags(tags);
+
+            // upload main image file
+            let thumbBlockClient = new BlockBlobClient(imageUrl, browserCredential);
+            await thumbBlockClient.upload(file.file, file.file.size);
+            await thumbBlockClient.setTags(tags);
+            await thumbBlockClient.setMetadata(metadata);
+        })
+    } else {
+        console.log("no files found...")
+    }
 }

@@ -122,8 +122,8 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 		Error.Printf("%s: error converting string to integer", err)
 		return nil, err
 	}
-	
-	blob, err := utils.GetLargeBlob(ctx, uploadsContainerBinding, blobName, maxRequestBodySize)
+
+	blob, err := utils.GetBlob(ctx, uploadsContainerBinding, blobName, maxRequestBodySize)
 	if err != nil {
 		Error.Printf("%s: error getting blob '%s': %v", serviceName, blobName, err)
 		return nil, err

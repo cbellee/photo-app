@@ -22,4 +22,6 @@
 /.env
 .env
 /**/.env
-node-modules
+/spa/node_modules
+node_modules
+

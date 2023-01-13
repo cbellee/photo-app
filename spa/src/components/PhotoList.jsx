@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getAlbumPhotos } from '../photoService';
+import { getAlbumCollections } from '../uploadService';
 import { useMsal } from "@azure/msal-react";
 import { makeStyles, withTheme } from '@mui/styles';
 import ImageList from '@mui/material/ImageList';
@@ -42,7 +43,7 @@ export default function PhotoList() {
   const [photoData, setPhotoData] = useState([])
 
   useEffect(() => {
-    getAlbumPhotos()
+    getAlbumCollections("uploads")
       .catch(error => console.log(error), (data = '[]') => console.log(data))
       .then((data) => setPhotoData(data));
   }, [])

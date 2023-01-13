@@ -121,7 +121,7 @@ func ImagesHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	}
 
 	Info.Printf("%s: getting blob: '%s'", serviceName, blobName)
-	blob, err := utils.GetLargeBlob(ctx, uploadsContainerBinding, blobName, maxRequestBodySize)
+	blob, err := utils.GetBlob(ctx, uploadsContainerBinding, blobName, maxRequestBodySize)
 	if err != nil {
 		Error.Printf("%s: error getting blob '%s': %v", serviceName, blobName, err)
 		return nil, err

@@ -12,7 +12,7 @@ import { LogLevel } from "@azure/msal-browser";
  */
 export const msalConfig = {
     auth: {
-        clientId: "cd0cff76-9d51-400f-8b0a-a4348452b195",
+        clientId: "19348540-a082-4d89-9e2f-db0f9d3e7701",
         authority: "https://login.microsoftonline.com/kainiindustries.net",
         redirectUri: "http://localhost:3000"
     },
@@ -53,27 +53,17 @@ export const msalConfig = {
  */
 export const loginRequest = {
     scopes: [
-        //"api://a845082b-e22d-49a8-8abb-e8484609abd7/Photo.Read",
-        //"api://a845082b-e22d-49a8-8abb-e8484609abd7/Photo.Write"
     ]
 };
 
-export const uploadApi = {
-    scopes: [
-        //"api://18911b98-3bf5-4a05-a417-8a12e496c9e5/Upload.Read",
-        //"api://18911b98-3bf5-4a05-a417-8a12e496c9e5/Upload.Write"
-    ],
-}
 
-export const photoApi = {
-    scopes: [
-        //"api://a845082b-e22d-49a8-8abb-e8484609abd7/Photo.Read",
-        //"api://a845082b-e22d-49a8-8abb-e8484609abd7/Photo.Write"
-    ],
-}
+export const storageRequestScope = {
+    scopes: ["https://storage.azure.com/user_impersonation"]
+};
 
 export const apiConfig = {
-    uploadApiEndpoint: "https://photo.orangecoast-f46e9cc8.australiaeast.azurecontainerapps.io/uploads",
+    tenantId: "3d49be6f-6e38-404b-bbd4-f61c1a2d25bf",
+    storageApiEndpoint: "https://storaodiwusgqeyiu.blob.core.windows.net",
     collectionApiEndpoint: "https://photo.orangecoast-f46e9cc8.australiaeast.azurecontainerapps.io/collections",
     albumApiEndpoint: "https://photo.orangecoast-f46e9cc8.australiaeast.azurecontainerapps.io/albums",
     photoApiEndpoint: "https://photo.orangecoast-f46e9cc8.australiaeast.azurecontainerapps.io/photos"
