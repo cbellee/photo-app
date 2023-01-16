@@ -4,13 +4,20 @@ import { makeStyles } from '@mui/styles';
 import { useMsal } from "@azure/msal-react";
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
+import Select from 'react-select'
 import ListSubheader from '@mui/material/ListSubheader';
 import IconButton from '@mui/material/IconButton';
 import { Info } from '@mui/icons-material';
+import { InputLabel, Link } from '@mui/material';
+import { DropdownButton, Dropdown } from "react-bootstrap/esm";
+import CreatableSelect from 'react-select/creatable';
 import { uploadAndSetTags } from '../uploadService.js'
 import { storageRequestScope } from '../authConfig'
 import Resizer from "react-image-file-resizer";
 import EXIF from "exif-js";
+import { Autocomplete, Container, TextField, Box, Typography } from "@mui/material";
+import { getAlbumCollections } from "../photoService.js";
+import { Form } from "react-router-dom";
 
 const imageTypeRegex = /image\/(png|jpg|jpeg)/gm;
 
@@ -45,6 +52,11 @@ const useStyles = makeStyles((theme) => ({
 
 export function ImageUpload() {
     const classes = useStyles();
+    const [collectionAlbumData, setCollectionAlbumData] = useState([]);
+    const [collectionData, setCollectionData] = useState([]);
+    const [albumData, setAlbumData] = useState([]);
+    const [currentAlbum, setCurrentAlbum] = useState([]);
+    const [currentCollection, setCurrentCollection] = useState([]);
     const { instance, accounts } = useMsal();
     const [imageFiles, setImageFiles] = useState([]);
     const [images, setImages] = useState([]);
@@ -105,6 +117,30 @@ export function ImageUpload() {
         }
     }, [])
 
+    useEffect(() => {
+        getAlbumCollections("uploads")
+            .catch(error => console.log(error), (data = '[]') => console.log("data: " + data))
+            .then((data) => { setCollectionAlbumData(data) });
+    })
+
+    const handleCollection = (event, value) => {
+        let albums = collectionAlbumData.get(event.value);
+        if (albums && albums.length > 0) {
+            setAlbumData(albums);
+            setCurrentCollection(event.value, [currentCollection]);
+            console.log("current collection: " + event.value)
+        } else {
+            setAlbumData([]);
+            setCurrentCollection(event.value, [currentAlbum]);
+            console.log("current collection: " + event.value)
+        }
+    }
+
+    const handleAlbum = (event, value) => {
+        setCurrentAlbum(event.value);
+        console.log("current album: " + event.value)
+    }
+
     const sendRequest = useCallback(async () => {
         if (isUploading) return
         setIsUploading(true)
@@ -115,7 +151,7 @@ export function ImageUpload() {
                 ...storageRequestScope,
                 account: accounts[0]
             }).then((response) => {
-                uploadAndSetTags(containerName, imageFiles, "athletics", "2022")
+                uploadAndSetTags(containerName, imageFiles, currentCollection, currentAlbum)
                     .catch(error => console.log("error: " + error));
             })
         } else {
@@ -177,29 +213,51 @@ export function ImageUpload() {
                         />
                         : null
                 }
+                <InputLabel>Collections</InputLabel>
+                <CreatableSelect
+                    onChange={(event, value) => handleCollection(event, value)}
+                    isClearable
+                    options={
+                        Array.from(collectionAlbumData.keys()).map((option, idx) => {
+                            return { value: option, label: option }
+                        })
+                    }
+                >
+                </CreatableSelect>
+                <InputLabel>Albums</InputLabel>
+                <CreatableSelect
+                    name="Albums"
+                    onChange={(event, value) => handleAlbum(event, value)}
+                    isClearable
+                    options={
+                        albumData.map((option, idx) => {
+                            return { value: idx, label: option }
+                        })
+                    }
+                >
+                </CreatableSelect>
             </form>
             <div className={classes.root}>
                 {
                     images.length > 0 ?
                         <ImageList cellHeight={300} spacing={30} className={classes.imageList}>
-                            <ImageListItem key="Subheader" cols={2} style={{ height: 'auto' }}>
+                            <ImageListItem key="Subheader" cols={4} style={{ height: 'auto' }}>
                                 <ListSubheader component="div"></ListSubheader>
                             </ImageListItem>
-
                             {images.map((image, idx) => {
-                                return <ImageListItem key={idx} className={classes.imageItem}>
-                                    <img src={image} alt={image} />
-                                    <ImageListItemBar
-                                        className={classes.imageTitleBar}
-                                        title={image}
-                                        actionIcon={<IconButton aria-label={`info about ${image}`} className={classes.icon}>
-                                            <Info />
-                                        </IconButton>} />
-                                </ImageListItem>;
+                                    return <ImageListItem key={idx} className={classes.imageItem}>
+                                        <img src={image} alt={image} />
+                                        <ImageListItemBar
+                                            className={classes.imageTitleBar}
+                                            title={image}
+                                            actionIcon={<IconButton aria-label={`info about ${image}`} className={classes.icon}>
+                                                <Info />
+                                            </IconButton>} />
+                                </ImageListItem>
                             })}
-                        </ImageList> : null
+            </ImageList> : null
                 }
-            </div>
         </div>
+        </div >
     );
 }

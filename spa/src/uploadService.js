@@ -26,11 +26,15 @@ const resizeFile = (file, maxWidth, maxHeight, format, quality, rotation) =>
         );
     });
 
-export async function uploadAndSetTags(containerName, files, album, collection) {
+export async function uploadAndSetTags(containerName, files, collection, album) {
     if (files.length > 0) {
         files.forEach(async (file) => {
-            var imageUrl = apiConfig.storageApiEndpoint + "/" + containerName + "/" + collection + "/" + album + "/" + file.file.name
-            var thumbUrl = apiConfig.storageApiEndpoint + "/" + containerName + "/" + collection + "/" + album + "/" + "thumbs" + "/" + file.file.name
+            var imageUrl = `${apiConfig.storageApiEndpoint}/${containerName}/${collection}/${album}/${file.file.name}`
+            var thumbUrl = `${apiConfig.storageApiEndpoint}/${containerName}/${collection}/${album}/thumbs/${file.file.name}`
+
+            var metadata = {
+                exifData: file.exif
+            }
 
             var tags = {
                 collection: collection,
@@ -38,25 +42,24 @@ export async function uploadAndSetTags(containerName, files, album, collection) 
                 name: file.file.name,
                 size: String(file.file.size),
                 url: imageUrl,
-                thumb_url: thumbUrl
+                thumbUrl: thumbUrl,
+                isThumb: 'false'
             }
-
-            var metadata = {
-                exifData: file.exif
-            }
+            
+            // upload main image file
+            let thumbBlockClient = new BlockBlobClient(imageUrl, browserCredential);
+            await thumbBlockClient.upload(file.file, file.file.size);
+            await thumbBlockClient.setTags(tags);
+            await thumbBlockClient.setMetadata(metadata);
 
             // create & upload thumbnail
+            tags.isThumb = 'true'
             const thumb = await resizeFile(file.file, 300, 300, "JPEG", 50, 0);
             let thumbFile = new File([thumb], file.file.name)
             let imageBlockClient = new BlockBlobClient(thumbUrl, browserCredential);
             await imageBlockClient.upload(thumbFile, thumbFile.size);
             await imageBlockClient.setTags(tags);
 
-            // upload main image file
-            let thumbBlockClient = new BlockBlobClient(imageUrl, browserCredential);
-            await thumbBlockClient.upload(file.file, file.file.size);
-            await thumbBlockClient.setTags(tags);
-            await thumbBlockClient.setMetadata(metadata);
         })
     } else {
         console.log("no files found...")

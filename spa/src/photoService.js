@@ -1,6 +1,6 @@
 import { apiConfig, msalConfig } from "./authConfig";
 import { InteractiveBrowserCredential } from "@azure/identity"
-import { BlobServiceClient } from "@azure/storage-blob"
+import { BlobClient, BlobServiceClient, BlockBlobClient } from "@azure/storage-blob"
 
 var signInOptions = {
     clientId: msalConfig.auth.clientId,
@@ -15,16 +15,37 @@ const options = {
     includeTags: true
 }
 
-export async function getBlobsByTags(containerName, fileName, album, collection) {
-    let tags = {
-        collection: collection,
-        album: album
-    }
+export async function getBlobsByTags(containerName, collection, album, thumbsOnly = true) {
+    let tagQuery = `@container='${containerName}' AND collection='${collection}' AND album='${album}' AND isThumb='${thumbsOnly}'`;
+    let i = 1;
+    let blobs = [];
 
-    let imageUrl = apiConfig.storageApiEndpoint + "/" + containerName + "/" + collection + "/" + album + "/" + fileName
-    let blobServiceClient = new BlobServiceClient(imageUrl, browserCredential)
-    let blobs = blobServiceClient.findBlobsByTags(tags);
-    return blobs
+    const listOptions = {
+        includeMetadata: true,
+        includeSnapshots: false,
+        includeTags: true,
+        includeVersions: false
+    };
+
+    let storageUrl = apiConfig.storageApiEndpoint
+    let blobServiceClient = new BlobServiceClient(storageUrl, browserCredential)
+    for await (const blob of blobServiceClient.findBlobsByTags(tagQuery, listOptions)) {
+        let containerClient = blobServiceClient.getContainerClient(blob.containerName);
+        let blockBlobClient = containerClient.getBlobClient(blob.name);
+        let tags = (await blockBlobClient.getTags()).tags;
+        let metadata = (await blockBlobClient.getProperties());
+        let b = {
+            name: blockBlobClient.name,
+            size: metadata.contentLength,
+            createdOn: metadata.createdOn,
+            lastModified: metadata.lastModified,
+            metadata: metadata.metadata,
+            tags: tags
+        }
+        blobs.push(b);
+    }
+    console.log("blob: " + JSON.stringify(blobs));
+    return blobs;
 }
 
 export async function getAlbumCollections(containerName) {
@@ -33,7 +54,7 @@ export async function getAlbumCollections(containerName) {
     let albumCollectionMap = new Map();
 
     for await (const blob of containerClient.listBlobsFlat(options)) {
-        if (blob.tags["collection"] !== undefined && (blob.tags["album"] !== undefined)) {
+        if (blob.tags && blob.tags["collection"] !== undefined && (blob.tags["album"] !== undefined)) {
             let collection = blob.tags["collection"];
             let album = blob.tags["album"];
 
@@ -47,62 +68,4 @@ export async function getAlbumCollections(containerName) {
         }
     }
     return albumCollectionMap;
-}
-
-
-export async function getCollections(accessToken) {
-    const headers = new Headers();
-    const bearer = `Bearer ${accessToken}`;
-
-    headers.append("Authorization", bearer);
-    headers.append("Access-Control-Allow-Headers", "*");
-    headers.append("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-    headers.append("Access-Control-Allow-Origin", "http://localhost:3000");
-
-    const options = {
-        method: "GET",
-        headers: headers,
-    };
-
-    return fetch(apiConfig.collectionApiEndpoint, options)
-        .then(response => response.json())
-        .catch(error => console.log(error));
-}
-
-export async function getAlbums(accessToken) {
-    const headers = new Headers();
-    const bearer = `Bearer ${accessToken}`;
-
-    headers.append("Authorization", bearer);
-    headers.append("Access-Control-Allow-Headers", "*");
-    headers.append("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-    headers.append("Access-Control-Allow-Origin", "http://localhost:3000");
-
-    const options = {
-        method: "GET",
-        headers: headers,
-    };
-
-    return fetch(apiConfig.albumApiEndpoint, options)
-        .then(response => response.json())
-        .catch(error => console.log(error));
-}
-
-export async function getAlbumPhotos(accessToken) {
-    const headers = new Headers();
-    const bearer = `Bearer ${accessToken}`;
-
-    headers.append("Authorization", bearer);
-    headers.append("Access-Control-Allow-Headers", "*");
-    headers.append("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-    headers.append("Access-Control-Allow-Origin", "http://localhost:3000");
-
-    const options = {
-        method: "GET",
-        headers: headers,
-    };
-
-    return fetch(apiConfig.photoApiEndpoint + "?collection=2022&album=sport", options)
-        .then(response => response.json())
-        .catch(error => console.log(error));
 }

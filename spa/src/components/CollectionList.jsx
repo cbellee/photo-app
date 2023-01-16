@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getAlbumCollections } from '../photoService';
-import { List, ListItem, ListItemText } from '@mui/material';
-import AlbumList from './AlbumList';
-import { Route, Routes, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export default function CollectionList() {
   const [collectionData, setCollectionData] = useState([])
@@ -15,16 +13,17 @@ export default function CollectionList() {
 
   return (
     <>
+    Collections
       {
         Array.from(collectionData.keys()).map(function (collection, i) {
           return <>
             <p>
               <Link
                 to={{
-                  pathname: "/collections/albums",
+                  pathname: `/${collection}`,
                 }}
-                state={collectionData.get(collection)}
-                key={i}
+                state={{ albums: collectionData.get(collection), collection: collection }}
+                key={collection}
               >
                 {collection}
               </Link>

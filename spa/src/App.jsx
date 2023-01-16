@@ -8,10 +8,7 @@ import { ImageUpload } from './components/ImageUpload'
 import { Route, Routes } from 'react-router-dom';
 import CollectionList from './components/CollectionList';
 import AlbumList from './components/AlbumList';
-
-/**
- * If a user is authenticated the ProfileContent component above is rendered. Otherwise a message indicating a user is not authenticated is rendered.
- */
+import PhotoList from './components/PhotoList';
 
 const MainContent = () => {
     const [tabIndex, setTabIndex] = React.useState(0);
@@ -22,38 +19,20 @@ const MainContent = () => {
     return (
         <div className="App">
             <ThemeProvider theme={myTheme}>
-                <Routes>
-                    <Route path="/collections" element={<CollectionList />} />
-                    <Route path="/collections/albums" element={<AlbumList />} />
-                </Routes>
                 <AuthenticatedTemplate>
-                    <Tabs
-                        value={tabIndex}
-                        onChange={handleTabChange}
-                        textColor="secondary"
-                        indicatorColor="secondary"
-                        aria-label="secondary tabs example"
-                    >
-                        <Tab label="Collections">
-                        </Tab>
-                        <Tab label="Upload">
-                        </Tab>
-                    </Tabs>
-                    <Box sx={{ padding: 2 }}>
-                        {tabIndex === 0 && (
-                            <Box>
-                                <CollectionList />
-                            </Box>
-                        )}
-                        {tabIndex === 1 && (
-                            <Box>
-                                <ImageUpload />
-                            </Box>
-                        )}
-                    </Box>
+                    <Routes>
+                        <Route path="/" element={<CollectionList />} />
+                        <Route path="/:collection" element={<AlbumList />} />
+                        <Route path="/:collection/:album" element={<PhotoList />} />
+                        <Route path="/uploads" element={<ImageUpload />} />
+                    </Routes>
                 </AuthenticatedTemplate>
                 <UnauthenticatedTemplate>
-
+                    <Routes>
+                        <Route path="/" element={<CollectionList />}></Route>
+                        <Route path="/:collection" element={<AlbumList />} />
+                        <Route path="/:collection/:album" element={<PhotoList />} />
+                    </Routes>
                 </UnauthenticatedTemplate>
             </ThemeProvider>
         </div>

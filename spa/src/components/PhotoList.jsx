@@ -1,16 +1,35 @@
 import React, { useState, useEffect } from 'react'
-import { getAlbumPhotos } from '../photoService';
-import { getAlbumCollections } from '../uploadService';
+import { useLocation, Link } from 'react-router-dom'
+import { getAlbumCollections } from '../photoService';
 import { useMsal } from "@azure/msal-react";
 import { makeStyles, withTheme } from '@mui/styles';
+import { Modal } from '@mui/material';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 import ListSubheader from '@mui/material/ListSubheader';
 import IconButton from '@mui/material/IconButton';
 import { Info, NoEncryption } from '@mui/icons-material';
+import { getBlobsByTags } from '../photoService';
 
 const useStyles = makeStyles((theme) => ({
+  paper: {
+    maxWidth: '100%',
+    maxHeight: '100vh',
+    margin: 'auto',
+    position: "absolute",
+    width: 'auto',
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: theme.shadows[10],
+    padding: theme.spacing(3, 3, 3, 3),
+    borderRadius: 3,
+    "&:focus-visible": {
+      outline: 'white auto 0px',
+    }
+  },
+  image: {
+    maxHeight: '60em'
+  },
   root: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -19,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.background.paper,
   },
   imageList: {
-    background: 'red'
+    background: 'white'
   },
   imageItem: {
     "&:hover imageTitleBar": {
@@ -37,31 +56,83 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+function getModalStyle() {
+  const top = 50;
+  const left = 50;
+
+  return {
+    top: `${top}%`,
+    left: `${left}%`,
+    transform: `translate(-${top}%, -${left}%)`
+  };
+}
+
 export default function PhotoList() {
   const classes = useStyles();
   const { instance, accounts } = useMsal();
-  const [photoData, setPhotoData] = useState([])
+  const [photoData, setPhotoData] = useState([]);
+  let location = useLocation();
+  const [open, setOpen] = useState(false);
+  let [currentIdx, setCurrentIdx] = useState(null);
+  const [modalStyle] = useState(getModalStyle);
+
+  const handleOpen = (idx) => {
+    setCurrentIdx(idx);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setCurrentIdx(null);
+    setOpen(false);
+  };
+
+  const handleScroll = (idx) => {
+    if (currentIdx >= photoData.length - 1) {
+      setCurrentIdx(0)
+    } else {
+      setCurrentIdx(++idx);
+    }
+  };
 
   useEffect(() => {
-    getAlbumCollections("uploads")
-      .catch(error => console.log(error), (data = '[]') => console.log(data))
+    let collection = location.state.collection;
+    let album = location.state.album;
+
+    getBlobsByTags("uploads", collection, album, true)
+      .catch(error => console.log(error), (data = '[]') => console.log("data: " + data))
       .then((data) => setPhotoData(data));
   }, [])
 
+  const body = (
+    <div style={modalStyle} className={classes.paper}>
+      {photoData[currentIdx] && (
+        <img className={classes.image} src={photoData[currentIdx].tags.url} alt={photoData[currentIdx].name} onClick={() => handleScroll(currentIdx)} />
+      )}
+    </div>
+  );
+
   return (
     <div className={classes.root}>
+      {
+        console.log("photoData: " + photoData)
+      }
       <ImageList cellHeight={300} spacing={30} className={classes.imageList}>
-        <ImageListItem key="Subheader" cols={2} style={{ height: 'auto' }}>
+        <ImageListItem key="Subheader" cols={4} style={{ height: 'auto' }}>
           <ListSubheader component="div"></ListSubheader>
         </ImageListItem>
-        {photoData.map((photo) => (
-          <ImageListItem key={photo.value.url} className={classes.imageItem}>
-            <img src={photo.value.url} alt={photo.value.name} />
+        {photoData.map((photo, idx) => (
+          <ImageListItem key={photo.tags.thumbUrl} className={classes.imageItem}>
+            <img
+              src={photo.tags.thumbUrl}
+              alt={photo.name}
+              className="small"
+              onClick={() => handleOpen(idx)}
+            />
             <ImageListItemBar
               className={classes.imageTitleBar}
-              title={photo.value.name}
+              title={photo.name}
               actionIcon={
-                <IconButton aria-label={`info about ${photo.value.name}`} className={classes.icon}>
+                <IconButton aria-label={`info about ${photo.name}`} className={classes.icon}>
                   <Info />
                 </IconButton>
               }
@@ -69,6 +140,9 @@ export default function PhotoList() {
           </ImageListItem>
         ))}
       </ImageList>
+      <Modal open={open} onClose={handleClose} onClick={() => handleScroll(currentIdx)}>
+        {body}
+      </Modal>
     </div>
   );
 }
