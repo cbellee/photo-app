@@ -2,14 +2,14 @@ param location string
 param acrName string
 param tag string
 
-param storeApiName string
-param storeApiPort string
-
 param resizeApiName string
 param resizeApiPort string
 
-param photoApiName string
-param photoApiPort string
+// param storeApiName string
+// param storeApiPort string
+
+// param photoApiName string
+// param photoApiPort string
 
 param uploadsStorageQueueName string
 param imagesStorageQueueName string
@@ -37,8 +37,8 @@ var affix = uniqueString(resourceGroup().id)
 
 var containerAppEnvName = 'app-env-${affix}'
 var resizeApiContainerImage = '${acr.properties.loginServer}/${resizeApiName}:${tag}'
-var storeApiContainerImage = '${acr.properties.loginServer}/${storeApiName}:${tag}'
-var photoApiContainerImage = '${acr.properties.loginServer}/${photoApiName}:${tag}'
+//var storeApiContainerImage = '${acr.properties.loginServer}/${storeApiName}:${tag}'
+//var photoApiContainerImage = '${acr.properties.loginServer}/${photoApiName}:${tag}'
 var acrLoginServer = '${acrName}.azurecr.io'
 var acrAdminPassword = listCredentials(acr.id, '2021-12-01-preview').passwords[0].value
 var workspaceName = 'wks-${affix}'
@@ -141,7 +141,7 @@ module containerAppEnvModule './modules/cappenv.bicep' = {
   }
 }
 
-resource resizeApi 'Microsoft.App/containerApps@2022-10-01' = {
+resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: resizeApiName
   location: location
   tags: tags
@@ -238,6 +238,10 @@ resource resizeApi 'Microsoft.App/containerApps@2022-10-01' = {
               name: 'GRPC_MAX_REQUEST_BODY_SIZE_MB'
               value: string(grpcMaxRequestSizeMb)
             }
+            {
+              name: 'STORAGE_ACCOUNT_NAME'
+              value: storModule.outputs.name
+            }
           ]
         }
       ]
@@ -249,7 +253,7 @@ resource resizeApi 'Microsoft.App/containerApps@2022-10-01' = {
   }
 }
 
-resource storeApi 'Microsoft.App/containerApps@2022-10-01' = {
+/* resource storeApi 'Microsoft.App/containerApps@2022-10-01' = {
   name: storeApiName
   location: location
   tags: tags
@@ -445,7 +449,7 @@ resource photoApi 'Microsoft.App/containerApps@2022-10-01' = {
       }
     }
   }
-}
+} */
 
 resource uploadsStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
   dependsOn: [
@@ -473,7 +477,6 @@ resource uploadsStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/dap
     ]
     scopes: [
       resizeApiName
-      storeApiName
     ]
   }
 }
@@ -504,7 +507,6 @@ resource imagesStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/dapr
     ]
     scopes: [
       resizeApiName
-      storeApiName
     ]
   }
 }
@@ -535,7 +537,6 @@ resource uploadsStorageDaprComponent 'Microsoft.App/managedEnvironments/daprComp
     ]
     scopes: [
       resizeApiName
-      storeApiName
     ]
   }
 }
@@ -566,7 +567,6 @@ resource thumbsStorageDaprComponent 'Microsoft.App/managedEnvironments/daprCompo
     ]
     scopes: [
       resizeApiName
-      storeApiName
     ]
   }
 }
@@ -597,12 +597,11 @@ resource imagesStorageDaprComponent 'Microsoft.App/managedEnvironments/daprCompo
     ]
     scopes: [
       resizeApiName
-      storeApiName
     ]
   }
 }
 
-resource cosmosDbDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
+/* resource cosmosDbDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
   dependsOn: [
     containerAppEnvModule
   ]
@@ -635,7 +634,7 @@ resource cosmosDbDaprComponent 'Microsoft.App/managedEnvironments/daprComponents
       photoApiName
     ]
   }
-}
+} */
 
-output photoUrl string = photoApi.properties.configuration.ingress.fqdn
+output resizeUrl string = resizeApi.properties.configuration.ingress.fqdn
 output storageAccount string = storModule.outputs.name
