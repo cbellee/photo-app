@@ -143,6 +143,7 @@ func GetBlob(ctx context.Context, bindingName string, blobName string, maxReques
 		return nil, fmt.Errorf("getLargeBlob: %w", err)
 	}
 
+	fmt.Printf("blob size in utils.go: %s", fmt.Sprint((out.Data)) )
 	return out, nil
 }
 

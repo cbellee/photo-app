@@ -169,6 +169,8 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 		return nil, err
 	}
 
+	Info.Printf("'thumbBytes' blob size: %s", fmt.Sprint(len(thumbBytes)))
+
 	// write thumbnail to blob storage
 	_, err = setBlob(ctx, thumbsContainerBinding, blobPath, thumbBytes, blob.Metadata["collection"], blob.Metadata["album"])
 	if err != nil {
