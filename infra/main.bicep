@@ -12,14 +12,14 @@ param resizeApiPort string
 // param photoApiPort string
 
 param uploadsStorageQueueName string
-param imagesStorageQueueName string
+// param imagesStorageQueueName string
 param thumbsContainerName string
 param imagesContainerName string
 param uploadsContainerName string
 
-param databaseName string
-param containerName string
-param partitionKey string
+// param databaseName string
+// param containerName string
+// param partitionKey string
 
 param maxThumbHeight string
 param maxThumbWidth string
@@ -34,11 +34,10 @@ param tags object = {
 }
 
 var affix = uniqueString(resourceGroup().id)
-
 var containerAppEnvName = 'app-env-${affix}'
 var resizeApiContainerImage = '${acr.properties.loginServer}/${resizeApiName}:${tag}'
-//var storeApiContainerImage = '${acr.properties.loginServer}/${storeApiName}:${tag}'
-//var photoApiContainerImage = '${acr.properties.loginServer}/${photoApiName}:${tag}'
+var storageBlobDataOwnerRoleDefinitionID = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
+
 var acrLoginServer = '${acrName}.azurecr.io'
 var acrAdminPassword = listCredentials(acr.id, '2021-12-01-preview').passwords[0].value
 var workspaceName = 'wks-${affix}'
@@ -90,7 +89,7 @@ module storModule 'modules/stor.bicep' = {
         name: uploadsContainerName
         publicAccess: 'None'
       }
-/*       thumbsContainerName
+      /*       thumbsContainerName
       imagesContainerName
       uploadsContainerName */
     ]
@@ -98,7 +97,7 @@ module storModule 'modules/stor.bicep' = {
   }
 }
 
-module cosmosModule 'modules/cosmos.bicep' = {
+/* module cosmosModule 'modules/cosmos.bicep' = {
   name: 'module-cosmos'
   params: {
     location: location
@@ -107,7 +106,7 @@ module cosmosModule 'modules/cosmos.bicep' = {
     partitionKey: partitionKey
     databaseName: databaseName
   }
-}
+} */
 
 module eventGridModule 'modules/eventgrid.bicep' = {
   name: 'module-evg'
@@ -250,6 +249,15 @@ resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
         maxReplicas: 10
       }
     }
+  }
+}
+
+// grant resize container app System Managed Identity 'Storage Blob Data Owner' permission on the storage account
+module rbacBlobPermission 'modules/rbac.bicep' = {
+  name: 'module-rbac'
+  params: {
+    principalId: resizeApi.identity.principalId
+    roleDefinitionID: storageBlobDataOwnerRoleDefinitionID
   }
 }
 
@@ -481,7 +489,7 @@ resource uploadsStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/dap
   }
 }
 
-resource imagesStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
+/* resource imagesStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
   dependsOn: [
     containerAppEnvModule
   ]
@@ -510,6 +518,7 @@ resource imagesStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/dapr
     ]
   }
 }
+ */
 
 resource uploadsStorageDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
   dependsOn: [
