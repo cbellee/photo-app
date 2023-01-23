@@ -137,7 +137,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 
 	path := strings.Split(u.Path, "/")
 	blobName := fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
-	fmt.Printf("relative url: %s\n", blobName)
+	fmt.Printf("blobName: %s\n", blobName)
 
 	// maxRequestBodySize := 30 //
 	maxRequestBodySize, err := strconv.Atoi(maxRequestBodySizeMb)
@@ -181,6 +181,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 		Error.Printf("error creating blob client: %s", err)
 	}
 
+	Info.Printf("setting tags for blob: %s", blobName)
 	_, err = client.ServiceClient().NewContainerClient(thumbsContainerName).NewBlockBlobClient(blobName).SetTags(ctx, tags, nil)
 	if err != nil {
 		Error.Printf("error setting tags: %s", err)
