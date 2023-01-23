@@ -178,12 +178,16 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	}
 
 	// set tags
-	tags := blob.Metadata
+	tags := make(map[string]string)
+	tags["collection"] = blob.Metadata["collection"]
+	tags["album"] = blob.Metadata["album"]
 	tags["isThumb"] = "true"
 	tags["url"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "thumbs", path)
 	tags["name"] = path[len(path)-1]
+	tags["prefix"] = fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
 
 	Info.Printf("setting tags for blob: %s", blobPath)
+	Info.Printf("setting tags: %s \n : %s", blobPath, tags)
 	_, err = client.ServiceClient().NewContainerClient(thumbsContainerName).NewBlockBlobClient(blobPath).SetTags(ctx, tags, nil)
 	if err != nil {
 		Error.Printf("error setting tags: %s", err)
