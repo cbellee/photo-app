@@ -162,7 +162,16 @@ resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
         enabled: true
         httpMaxRequestSize: grpcMaxRequestSizeMb
       }
-      secrets: secrets
+      secrets: [
+        {
+          name: 'registry-password'
+          value: acrAdminPassword
+        }
+        {
+          name: 'storage-key'
+          value: storModule.outputs.key
+        }
+      ]
       registries: [
         {
           passwordSecretRef: 'registry-password'
@@ -247,6 +256,21 @@ resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
       scale: {
         minReplicas: 1
         maxReplicas: 10
+        rules: [
+          {
+            name: 'azure-queue-scaler'
+            azureQueue: {
+              queueLength: 5
+              queueName: 'uploads'
+              auth: [
+                {
+                  secretRef: 'storage-key'
+                  triggerParameter: 'connection'
+                }
+              ]
+            }
+          }
+        ]
       }
     }
   }
