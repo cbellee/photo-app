@@ -109,8 +109,6 @@ func GetEnvValue(key, fallback string) string {
 	return fallback
 }
 
-
-
 func GetBlob(ctx context.Context, bindingName string, blobName string, maxRequestBodySize int) (out *dapr.BindingEvent, err error) {
 	headerBuffer := 1
 	var opts []grpc.CallOption
@@ -125,7 +123,6 @@ func GetBlob(ctx context.Context, bindingName string, blobName string, maxReques
 	if err != nil {
 		panic(err)
 	}
-	//defer client.Close()
 
 	in := &dapr.InvokeBindingRequest{
 		Name:      bindingName,
@@ -140,10 +137,9 @@ func GetBlob(ctx context.Context, bindingName string, blobName string, maxReques
 
 	out, err = client.InvokeBinding(ctx, in)
 	if err != nil {
-		return nil, fmt.Errorf("getLargeBlob: %w", err)
+		return nil, fmt.Errorf("getBlob: %w", err)
 	}
 
-	fmt.Printf("blob size in utils.go: %s", fmt.Sprint((out.Data)) )
 	return out, nil
 }
 

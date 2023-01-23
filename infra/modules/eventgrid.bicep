@@ -41,7 +41,7 @@ resource eventGridSubscription 'Microsoft.EventGrid/systemTopics/eventSubscripti
       endpointType: 'StorageQueue'
       properties: {
         queueName: container
-        queueMessageTimeToLiveInSeconds: 60
+        queueMessageTimeToLiveInSeconds: 600
         resourceId: storageAccountId
       }
     }
