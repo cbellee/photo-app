@@ -162,6 +162,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	}
 
 	// resize image as thumbnail
+	Info.Printf("got blob size: %s", fmt.Sprint(len(blob.Data)))
 	thumbBytes, err := utils.ResizeImage(blob.Data, evt.Data.ContentType, blobPath, mth, mtw)
 	if err != nil {
 		Error.Printf("%s: error resizing image: '%s': %v", serviceName, blobPath, err)
