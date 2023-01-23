@@ -136,8 +136,8 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	}
 
 	path := strings.Split(u.Path, "/")
-	blobName := fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
-	fmt.Printf("blobName: %s\n", blobName)
+	blobPath := fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
+	fmt.Printf("blobName: %s\n", blobPath)
 
 	// maxRequestBodySize := 30 //
 	maxRequestBodySize, err := strconv.Atoi(maxRequestBodySizeMb)
@@ -146,23 +146,23 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 		return nil, err
 	}
 
-	blob, err := utils.GetBlob(ctx, uploadsContainerBinding, blobName, maxRequestBodySize)
+	blob, err := utils.GetBlob(ctx, uploadsContainerBinding, blobPath, maxRequestBodySize)
 	if err != nil {
-		Error.Printf("%s: error getting blob '%s': %v", serviceName, blobName, err)
+		Error.Printf("%s: error getting blob '%s': %v", serviceName, blobPath, err)
 		return nil, err
 	}
 
 	// resize image as thumbnail
-	thumbBytes, err := utils.ResizeImage(blob.Data, evt.Data.ContentType, blobName, mth, mtw)
+	thumbBytes, err := utils.ResizeImage(blob.Data, evt.Data.ContentType, blobPath, mth, mtw)
 	if err != nil {
-		Error.Printf("%s: error resizing image: '%s': %v", serviceName, blobName, err)
+		Error.Printf("%s: error resizing image: '%s': %v", serviceName, blobPath, err)
 		return nil, err
 	}
 
 	// write thumbnail to blob storage
-	_, err = setBlob(ctx, thumbsContainerBinding, blobName, thumbBytes, blob.Metadata["collection"], blob.Metadata["album"])
+	_, err = setBlob(ctx, thumbsContainerBinding, blobPath, thumbBytes, blob.Metadata["collection"], blob.Metadata["album"])
 	if err != nil {
-		Error.Printf("%s: error saving blob: '%s': %v", serviceName, blobName, err)
+		Error.Printf("%s: error saving blob: '%s': %v", serviceName, blobPath, err)
 		return nil, err
 	}
 
@@ -174,36 +174,36 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 
 	tags := blob.Metadata
 	tags["isThumb"] = "true"
-	tags["name"] = blobName
+	tags["name"] = path[len(path)-1]
 
 	client, err := azblob.NewClient(storageUrl, credential, &azblob.ClientOptions{})
 	if err != nil {
 		Error.Printf("error creating blob client: %s", err)
 	}
 
-	Info.Printf("setting tags for blob: %s", blobName)
-	_, err = client.ServiceClient().NewContainerClient(thumbsContainerName).NewBlockBlobClient(blobName).SetTags(ctx, tags, nil)
+	Info.Printf("setting tags for blob: %s", blobPath)
+	_, err = client.ServiceClient().NewContainerClient(thumbsContainerName).NewBlockBlobClient(blobPath).SetTags(ctx, tags, nil)
 	if err != nil {
 		Error.Printf("error setting tags: %s", err)
 	}
 
 	// resize main image
-	imgBytes, err := utils.ResizeImage(blob.Data, evt.Data.ContentType, blobName, mih, miw)
+	imgBytes, err := utils.ResizeImage(blob.Data, evt.Data.ContentType, blobPath, mih, miw)
 	if err != nil {
-		Error.Printf("%s: error resizing image: '%s': %v", serviceName, blobName, err)
+		Error.Printf("%s: error resizing image: '%s': %v", serviceName, blobPath, err)
 		return nil, err
 	}
 
 	// write main image to blob storage
-	_, err = setBlob(ctx, imagesContainerBinding, blobName, imgBytes, blob.Metadata["collection"], blob.Metadata["album"])
+	_, err = setBlob(ctx, imagesContainerBinding, blobPath, imgBytes, blob.Metadata["collection"], blob.Metadata["album"])
 	if err != nil {
-		Error.Printf("%s: error saving blob '%s': %v", serviceName, blobName, err)
+		Error.Printf("%s: error saving blob '%s': %v", serviceName, blobPath, err)
 		return nil, err
 	}
 
 	tags["isThumb"] = "false"
 
-	_, err = client.ServiceClient().NewContainerClient(imagesContainerName).NewBlockBlobClient(blobName).SetTags(ctx, tags, nil)
+	_, err = client.ServiceClient().NewContainerClient(imagesContainerName).NewBlockBlobClient(blobPath).SetTags(ctx, tags, nil)
 	if err != nil {
 		Error.Printf("error setting tags: %s", err)
 	}

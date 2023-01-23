@@ -115,7 +115,6 @@ az deployment group create \
 --parameters tag=$TAG \
 --parameters acrName=$ACR_NAME \
 --parameters uploadsStorageQueueName=$UPLOADS_QUEUE_NAME \
---parameters imagesStorageQueueName=$IMAGES_QUEUE_NAME \
 --parameters thumbsContainerName=$THUMBS_CONTAINER_NAME \
 --parameters imagesContainerName=$IMAGES_CONTAINER_NAME \
 --parameters uploadsContainerName=$UPLOADS_CONTAINER_NAME \
@@ -123,7 +122,4 @@ az deployment group create \
 --parameters maxThumbWidth=$MAX_THUMB_WIDTH \
 --parameters maxImageHeight=$MAX_IMAGE_HEIGHT \
 --parameters maxImageWidth=$MAX_IMAGE_WIDTH \
---parameters databaseName=$COSMOSDB_NAME \
---parameters containerName=$COSMOSDB_CONTAINER_NAME \
---parameters partitionKey=$COSMOSDB_PARTITION_KEY \
 --parameters grpcMaxRequestSizeMb=$GRPC_MAX_REQUEST_SIZE_MB
