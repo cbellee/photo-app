@@ -71,6 +71,17 @@ if [[ $skipBuild != 1 ]]; then
 	echo "TAG: $TAG"
 
 	# build image in ACR
+	az acr login -n $ACR_NAME 
+	dir .
+
+	docker build -t "$ACR_NAME.azurecr.io/$RESIZE_API_IMAGE" \
+	--build-arg SERVICE_NAME=$RESIZE_API_NAME \
+	--build-arg SERVICE_PORT=$RESIZE_API_PORT \
+	-f ./Dockerfile .
+
+	docker push "$ACR_NAME.azurecr.io/$RESIZE_API_IMAGE"
+
+':
 	az acr build -r $ACR_NAME \
 		-t $RESIZE_API_IMAGE \
 		--build-arg SERVICE_NAME=$RESIZE_API_NAME \
@@ -88,6 +99,7 @@ if [[ $skipBuild != 1 ]]; then
 		--build-arg SERVICE_NAME=$PHOTO_API_NAME \
 		--build-arg SERVICE_PORT=$PHOTO_API_PORT \
 		-f ./Dockerfile .
+'
 
 		cd ./scripts
 fi
@@ -100,10 +112,6 @@ az deployment group create \
 --parameters location=$LOCATION \
 --parameters resizeApiName=$RESIZE_API_NAME \
 --parameters resizeApiPort=$RESIZE_API_PORT \
---parameters photoApiName=$PHOTO_API_NAME \
---parameters photoApiPort=$PHOTO_API_PORT \
---parameters storeApiName=$STORE_API_NAME \
---parameters storeApiPort=$STORE_API_PORT \
 --parameters tag=$TAG \
 --parameters acrName=$ACR_NAME \
 --parameters uploadsStorageQueueName=$UPLOADS_QUEUE_NAME \
