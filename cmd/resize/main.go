@@ -183,8 +183,8 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	tags["collection"] = blob.Metadata["collection"]
 	tags["album"] = blob.Metadata["album"]
 	tags["isThumb"] = "true"
-	tags["url"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "thumbs", blobPath)
-	tags["imgUrl"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "images", blobPath)
+	tags["url"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "thumbs", string(blobPath))
+	tags["imgUrl"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "images", string(blobPath))
 	tags["name"] = path[len(path)-1]
 	tags["prefix"] = fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
 
@@ -193,10 +193,10 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 		Info.Fatal(err)
 	}
 
-	Info.Println("-------- \n Tags \n -------- \n", string(t))
+	Info.Println("Tags \n -------- \n", string(t))
 
 	Info.Printf("setting tags for blob: %s", blobPath)
-	Info.Printf("setting tags: %s \n : %s", blobPath, tags)
+	Info.Printf("setting tags: %s \n tags: %s", blobPath, tags)
 	_, err = client.ServiceClient().NewContainerClient(thumbsContainerName).NewBlockBlobClient(blobPath).SetTags(ctx, tags, nil)
 	if err != nil {
 		Error.Printf("error setting tags: %s", err)

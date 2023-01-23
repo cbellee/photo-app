@@ -63,7 +63,7 @@ ACR_NAME=$(az deployment group show --resource-group $RG_NAME --name 'acr-deploy
 if [[ $skipBuild != 1 ]]; then
 
 	cd ..
-	echo "TAG: $TAG"
+	echo "IMAGE TAG: '$ACR_NAME.azurecr.io/$RESIZE_API_IMAGE'"
 
 	# build image in ACR
 	az acr login -n $ACR_NAME 
@@ -95,7 +95,7 @@ if [[ $skipBuild != 1 ]]; then
 		-f ./Dockerfile .
 '
 
-		cd ../scripts
+		cd ./scripts
 fi
 
 az deployment group create \
