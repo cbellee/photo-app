@@ -37,18 +37,12 @@ var affix = uniqueString(resourceGroup().id)
 var containerAppEnvName = 'app-env-${affix}'
 var resizeApiContainerImage = '${acr.properties.loginServer}/${resizeApiName}:${tag}'
 var storageBlobDataOwnerRoleDefinitionID = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
-
+var storageQueueCxnString = 'DefaultEndpointsProtocol=https;AccountName=${storModule.outputs.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storModule.outputs.key}'
 var acrLoginServer = '${acrName}.azurecr.io'
 var acrAdminPassword = listCredentials(acr.id, '2021-12-01-preview').passwords[0].value
 var workspaceName = 'wks-${affix}'
 var storageAccountName = 'stor${affix}'
 var aiName = 'ai-${affix}'
-var secrets = [
-  {
-    name: 'registry-password'
-    value: acrAdminPassword
-  }
-]
 
 module aiModule 'modules/ai.bicep' = {
   name: 'module-ai'
@@ -168,8 +162,8 @@ resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
           value: acrAdminPassword
         }
         {
-          name: 'storage-key'
-          value: storModule.outputs.key
+          name: 'storage-queue-cxn'
+          value: storageQueueCxnString
         }
       ]
       registries: [
@@ -264,7 +258,7 @@ resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
               queueName: 'uploads'
               auth: [
                 {
-                  secretRef: 'storage-key'
+                  secretRef: 'storage-queue-cxn'
                   triggerParameter: 'connection'
                 }
               ]

@@ -43,10 +43,10 @@ COSMOSDB_NAME='photodb'
 COSMOSDB_CONTAINER_NAME='photos'
 COSMOSDB_PARTITION_KEY='/partitionKey'
 
-MAX_THUMB_HEIGHT='96'
-MAX_THUMB_WIDTH='128'
-MAX_IMAGE_HEIGHT='480'
-MAX_IMAGE_WIDTH='640'
+MAX_THUMB_HEIGHT='165'
+MAX_THUMB_WIDTH='165'
+MAX_IMAGE_HEIGHT='1200'
+MAX_IMAGE_WIDTH='1600'
 
 az group create --location $LOCATION --name $RG_NAME
 
@@ -80,18 +80,6 @@ if [[ $skipBuild != 1 ]]; then
 		-t $RESIZE_API_IMAGE \
 		--build-arg SERVICE_NAME=$RESIZE_API_NAME \
 		--build-arg SERVICE_PORT=$RESIZE_API_PORT \
-		-f ./Dockerfile .
-
-	az acr build -r $ACR_NAME \
-		-t $STORE_API_IMAGE \
-		--build-arg SERVICE_NAME=$STORE_API_NAME \
-		--build-arg SERVICE_PORT=$STORE_API_PORT \
-		-f ./Dockerfile .
-
-	az acr build -r $ACR_NAME \
-		-t $PHOTO_API_IMAGE \
-		--build-arg SERVICE_NAME=$PHOTO_API_NAME \
-		--build-arg SERVICE_PORT=$PHOTO_API_PORT \
 		-f ./Dockerfile .
 '
 

@@ -15,7 +15,6 @@ import styled, { keyframes, css } from 'styled-components'
 
 const useStyles = makeStyles((theme) => ({
   modal: {
-    maxWidth: '100%',
     margin: 'auto',
     position: "absolute",
     width: 'auto',
@@ -31,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'black',
   },
   image: {
-    maxHeight: '40vw'
+    
   },
   root: {
     display: 'flex',
@@ -109,7 +108,7 @@ export default function PhotoList() {
   const body = (
     <div style={modalStyle} className={classes.modal}>
       {photoData[currentIdx] && (
-        <img className={classes.image} src={photoData[currentIdx].tags.url} alt={photoData[currentIdx].name} onClick={() => handleScroll(currentIdx)} />
+        <img className={classes.image} src={photoData[currentIdx].tags.imgUrl} alt={photoData[currentIdx].name} onClick={() => handleScroll(currentIdx)} />
       )}
     </div>
   );
@@ -121,9 +120,10 @@ export default function PhotoList() {
           <ListSubheader component="div"></ListSubheader>
         </ImageListItem>
         {photoData.map((photo, idx) => (
-          <ImageListItem key={photo.tags.thumbUrl} className={classes.imageItem}>
+          <ImageListItem key={photo.tags.imgUrl} className={classes.imageItem}>
             <img
-              src={photo.tags.thumbUrl}
+              //src={photo.tags.thumbUrl}
+              src={photo.tags.url}
               alt={photo.name}
               onClick={() => handleOpen(idx)}
             />
