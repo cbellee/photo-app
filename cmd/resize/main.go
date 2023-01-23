@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -183,8 +184,16 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	tags["album"] = blob.Metadata["album"]
 	tags["isThumb"] = "true"
 	tags["url"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "thumbs", path)
+	tags["imgUrl"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "images", path)
 	tags["name"] = path[len(path)-1]
 	tags["prefix"] = fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
+
+	t, err  := json.Marshal(tags)
+	if err != nil {
+		Info.Fatal(err)
+	}
+
+	Info.Println("-------- \n Tags \n -------- \n", string(t))
 
 	Info.Printf("setting tags for blob: %s", blobPath)
 	Info.Printf("setting tags: %s \n : %s", blobPath, tags)
