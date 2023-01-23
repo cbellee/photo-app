@@ -172,7 +172,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	Info.Printf("'thumbBytes' blob size: %s", fmt.Sprint(len(thumbBytes)))
 
 	// write thumbnail to blob storage
-	_, err = setBlob(ctx, thumbsContainerBinding, blobPath, thumbBytes, blob.Metadata["collection"], blob.Metadata["album"], evt.Data.ContentType)
+	_, err = setBlob(ctx, thumbsContainerBinding, blobPath, thumbBytes, blob.Metadata["collection"], blob.Metadata["album"], "image/jpeg")
 	if err != nil {
 		Error.Printf("%s: error saving blob: '%s': %v", serviceName, blobPath, err)
 		return nil, err
@@ -198,7 +198,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 
 	// write main image to blob storage
 	Info.Printf("'imgBytes' blob size: %s", fmt.Sprint(len(imgBytes)))
-	_, err = setBlob(ctx, imagesContainerBinding, blobPath, imgBytes, blob.Metadata["collection"], blob.Metadata["album"], evt.Data.ContentType)
+	_, err = setBlob(ctx, imagesContainerBinding, blobPath, imgBytes, blob.Metadata["collection"], blob.Metadata["album"], "image/jpeg")
 	if err != nil {
 		Error.Printf("%s: error saving blob '%s': %v", serviceName, blobPath, err)
 		return nil, err
