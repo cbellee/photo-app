@@ -236,7 +236,7 @@ func setBlob(ctx context.Context, bindingName string, blobName string, blob []by
 
 	out, err = client.InvokeBinding(ctx, in)
 	if err != nil {
-		return out, fmt.Errorf("setBlob: %w", err)
+		return out, fmt.Errorf("Error setBlob: %w", err)
 	}
 
 	return out, nil

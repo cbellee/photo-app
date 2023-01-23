@@ -34,7 +34,7 @@ func ResizeImage(imgBytes []byte, imageFormat string, blobName string, maxHeight
 
 	src, _, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
-		return buf.Bytes(), fmt.Errorf("ResizeImage: %w", err)
+		return buf.Bytes(), fmt.Errorf("Error ResizeImage: %w", err)
 	}
 
 	height := src.Bounds().Dy()

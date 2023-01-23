@@ -46,24 +46,24 @@ type CosmosDocument struct {
 }
 
 type Photo struct {
-	Id            uuid.UUID `json:"Id"`
-	Name          string    `json:"Name"`
-	Album         string    `json:"Album"`
-	Collection    string    `json:"Collection"`
-	Type          string    `json:"Type"`
-	Url           string    `json:"Url"`
-	ThumbsUrl     string    `json:"ThumbsUrl"`
-	ContentLength int32     `json:"ContentLength"`
-	Created       time.Time `json:"Created"`
-	Modified      time.Time `json:"Modified"`
+	Id            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	Album         string    `json:"album"`
+	Collection    string    `json:"collection"`
+	Type          string    `json:"type"`
+	Url           string    `json:"url"`
+	ThumbsUrl     string    `json:"thumbsUrl"`
+	ContentLength int32     `json:"contentLength"`
+	Created       time.Time `json:"created"`
+	Modified      time.Time `json:"modified"`
 }
 
 type Album struct {
-	Name string `json:"Name"`
+	Name string `json:"name"`
 }
 
 type Collection struct {
-	Name string `json:"Name"`
+	Name string `json:"name"`
 }
 
 type Event struct {
