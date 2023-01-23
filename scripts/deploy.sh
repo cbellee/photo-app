@@ -67,7 +67,6 @@ if [[ $skipBuild != 1 ]]; then
 
 	# build image in ACR
 	az acr login -n $ACR_NAME 
-	dir .
 
 	docker build -t "$ACR_NAME.azurecr.io/$RESIZE_API_IMAGE" \
 	--build-arg SERVICE_NAME=$RESIZE_API_NAME \
@@ -96,7 +95,7 @@ if [[ $skipBuild != 1 ]]; then
 		-f ./Dockerfile .
 '
 
-		cd ./scripts
+		cd ../scripts
 fi
 
 az deployment group create \

@@ -183,8 +183,8 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	tags["collection"] = blob.Metadata["collection"]
 	tags["album"] = blob.Metadata["album"]
 	tags["isThumb"] = "true"
-	tags["url"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "thumbs", path)
-	tags["imgUrl"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "images", path)
+	tags["url"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "thumbs", blobPath)
+	tags["imgUrl"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "images", blobPath)
 	tags["name"] = path[len(path)-1]
 	tags["prefix"] = fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
 
