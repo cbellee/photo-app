@@ -199,11 +199,11 @@ func GetBlobTags(blobClient *azblob.Client, containerName string, ctx context.Co
 			collection := ""
 
 			for _, t := range tags.BlobTagSet {
-				if *t.Key == "Collection" {
+				if *t.Key == "collection" {
 					collection = *t.Value
 				}
 
-				if *t.Key == "Album" {
+				if *t.Key == "album" {
 					album = *t.Value
 				}
 			}
@@ -236,8 +236,8 @@ func GetBlobMetadata(blobClient *azblob.Client, containerName string, ctx contex
 		}
 
 		for _, _blob := range resp.Segment.BlobItems {
-			if !Contains(metadataMap[*_blob.Metadata["Collection"]], *_blob.Metadata["Album"]) {
-				metadataMap[*_blob.Metadata["Collection"]] = append(metadataMap[*_blob.Metadata["Collection"]], *_blob.Metadata["Album"])
+			if !Contains(metadataMap[*_blob.Metadata["collection"]], *_blob.Metadata["album"]) {
+				metadataMap[*_blob.Metadata["collection"]] = append(metadataMap[*_blob.Metadata["collection"]], *_blob.Metadata["album"])
 			}
 		}
 	}

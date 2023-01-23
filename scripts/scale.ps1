@@ -31,8 +31,8 @@ Get-ChildItem $localPath -Directory | ForEach-Object {
             -Blob "$collection/$album/$($_.Name)" `
             -BlobType Block `
             -Properties @{'ContentType'='image/jpeg'} `
-            -Metadata @{Collection=$collection;Album=$album;Name=$($_.Name)} `
-            -Tag @{Collection=$collection;Album=$album} `
+            -Metadata @{collection=$collection;album=$album;name=$($_.Name)} `
+            -Tag @{collection=$collection;album=$album} `
             -Context $ctx `
             -Force
         }

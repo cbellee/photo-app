@@ -16,7 +16,7 @@ const options = {
 }
 
 export async function getBlobsByTags(containerName, collection, album, thumbsOnly = true) {
-    let tagQuery = `@container='${containerName}' AND Collection='${collection}' AND Album='${album}' AND isThumb='${thumbsOnly}'`;
+    let tagQuery = `@container='${containerName}' AND collection='${collection}' AND album='${album}' AND isThumb='${thumbsOnly}'`;
     let i = 1;
     let blobs = [];
 
@@ -53,9 +53,9 @@ export async function getAlbumCollections(containerName) {
     let albumCollectionMap = new Map();
 
     for await (const blob of containerClient.listBlobsFlat(options)) {
-        if (blob.tags && blob.tags["Collection"] !== undefined && (blob.tags["Album"] !== undefined)) {
-            let collection = blob.tags["Collection"];
-            let album = blob.tags["Album"];
+        if (blob.tags && blob.tags["collection"] !== undefined && (blob.tags["album"] !== undefined)) {
+            let collection = blob.tags["collection"];
+            let album = blob.tags["album"];
 
             if (!albumCollectionMap.has(collection)) {
                 albumCollectionMap.set(collection, [album]);
