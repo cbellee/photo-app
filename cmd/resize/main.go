@@ -128,7 +128,16 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	Info.Printf("%s: input binding handler '%s': Url: '%s', EventTime: '%s' MetaData: '%v'", serviceName, uploadsQueueBinding, evt.Data.Url, evt.EventTime, in.Metadata)
 
 	storageUrl := fmt.Sprintf("https://%s.blob.core.windows.net/", storageConfig.StorageAccount)
-	// blobName := evt.Data.Url[strings.LastIndex(evt.Data.Url, "/")+1:]
+
+	credential, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		log.Fatal("Invalid credentials with error: " + err.Error())
+	}
+
+	client, err := azblob.NewClient(storageUrl, credential, &azblob.ClientOptions{})
+	if err != nil {
+		Error.Printf("error creating blob client: %s", err)
+	}
 
 	u, err := url.Parse(evt.Data.Url)
 	if err != nil {
@@ -137,7 +146,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 
 	path := strings.Split(u.Path, "/")
 	blobPath := fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
-	fmt.Printf("blobName: %s\n", blobPath)
+	fmt.Printf("blobPath: %s\n", blobPath)
 
 	// maxRequestBodySize := 30 //
 	maxRequestBodySize, err := strconv.Atoi(maxRequestBodySizeMb)
@@ -167,19 +176,9 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	}
 
 	// set tags
-	credential, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		log.Fatal("Invalid credentials with error: " + err.Error())
-	}
-
 	tags := blob.Metadata
 	tags["isThumb"] = "true"
 	tags["name"] = path[len(path)-1]
-
-	client, err := azblob.NewClient(storageUrl, credential, &azblob.ClientOptions{})
-	if err != nil {
-		Error.Printf("error creating blob client: %s", err)
-	}
 
 	Info.Printf("setting tags for blob: %s", blobPath)
 	_, err = client.ServiceClient().NewContainerClient(thumbsContainerName).NewBlockBlobClient(blobPath).SetTags(ctx, tags, nil)
@@ -195,6 +194,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	}
 
 	// write main image to blob storage
+	Info.Printf("'imgBytes' blob size: %s", fmt.Sprint(len(imgBytes)))
 	_, err = setBlob(ctx, imagesContainerBinding, blobPath, imgBytes, blob.Metadata["collection"], blob.Metadata["album"])
 	if err != nil {
 		Error.Printf("%s: error saving blob '%s': %v", serviceName, blobPath, err)
@@ -229,7 +229,7 @@ func setBlob(ctx context.Context, bindingName string, blobName string, blob []by
 		},
 	}
 
-	Info.Printf("%s: saving image '%s' to container '%s'", serviceName, blobName, bindingName)
+	Info.Printf("%s: saving image '%s' to binding '%s'", serviceName, blobName, bindingName)
 
 	out, err = client.InvokeBinding(ctx, in)
 	if err != nil {

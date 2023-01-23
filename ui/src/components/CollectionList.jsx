@@ -15,7 +15,7 @@ export default function CollectionList() {
     <>
     Collections
       {
-        Array.from(collectionData.keys()).map(function (collection, i) {
+        Array.from(collectionData.keys()).map(function (collection) {
           return <>
             <p>
               <Link

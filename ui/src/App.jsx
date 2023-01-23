@@ -16,6 +16,7 @@ const MainContent = () => {
     const handleTabChange = (event, newTabIndex) => {
         setTabIndex(newTabIndex);
     };
+    
     return (
         <div className="App">
             <ThemeProvider theme={myTheme}>

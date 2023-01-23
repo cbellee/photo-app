@@ -8,10 +8,9 @@ done
 
 LOCATION='australiaeast'
 RG_NAME="photo-app-test-rg"
-ENVIRONMENT=dev
-SEMVER=0.1.0
+SEMVER='0.1.0'
 REV=$(git rev-parse --short HEAD)
-TAG="$ENVIRONMENT-$SEMVER-$REV"
+TAG="$SEMVER-$REV"
 
 DOMAIN_NAME="kainiindustries.net"
 CLIENT_ID="beb06d91-7b0c-4214-8259-b798ed982d08"
