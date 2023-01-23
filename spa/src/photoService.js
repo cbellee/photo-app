@@ -44,7 +44,6 @@ export async function getBlobsByTags(containerName, collection, album, thumbsOnl
         }
         blobs.push(b);
     }
-    console.log("blob: " + JSON.stringify(blobs));
     return blobs;
 }
 

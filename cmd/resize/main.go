@@ -6,15 +6,21 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
 
+	"models"
 	"utils"
 
 	dapr "github.com/dapr/go-sdk/client"
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 )
 
 var (
@@ -26,6 +32,14 @@ var (
 	thumbsContainerBinding  = utils.GetEnvValue("THUMBS_CONTAINER_BINDING", "")
 	uploadsContainerBinding = utils.GetEnvValue("UPLOADS_CONTAINER_BINDING", "")
 	maxRequestBodySizeMb    = utils.GetEnvValue("GRPC_MAX_REQUEST_BODY_SIZE_MB", "30")
+
+	storageConfig = models.StorageConfig{
+		StorageAccount:   utils.GetEnvValue("STORAGE_ACCOUNT_NAME", ""),
+		StorageContainer: utils.GetEnvValue("STORAGE_CONTAINER_NAME", ""),
+	}
+
+	thumbsContainerName = "thumbs"
+	imagesContainerName = "images"
 
 	Trace   *log.Logger
 	Info    *log.Logger
@@ -113,8 +127,17 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 
 	Info.Printf("%s: input binding handler '%s': Url: '%s', EventTime: '%s' MetaData: '%v'", serviceName, uploadsQueueBinding, evt.Data.Url, evt.EventTime, in.Metadata)
 
-	// get image
-	blobName := evt.Data.Url[strings.LastIndex(evt.Data.Url, "/")+1:]
+	storageUrl := fmt.Sprintf("https://%s.blob.core.windows.net/", storageConfig.StorageAccount)
+	// blobName := evt.Data.Url[strings.LastIndex(evt.Data.Url, "/")+1:]
+
+	u, err := url.Parse(evt.Data.Url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	path := strings.Split(u.Path, "/")
+	blobName := fmt.Sprintf("%s/%s/%s", path[len(path)-3], path[len(path)-2], path[len(path)-1])
+	fmt.Printf("relative url: %s\n", blobName)
 
 	// maxRequestBodySize := 30 //
 	maxRequestBodySize, err := strconv.Atoi(maxRequestBodySizeMb)
@@ -143,6 +166,26 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 		return nil, err
 	}
 
+	// set tags
+	credential, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		log.Fatal("Invalid credentials with error: " + err.Error())
+	}
+
+	tags := blob.Metadata
+	tags["isThumb"] = "true"
+	tags["name"] = blobName
+
+	client, err := azblob.NewClient(storageUrl, credential, &azblob.ClientOptions{})
+	if err != nil {
+		Error.Printf("error creating blob client: %s", err)
+	}
+
+	_, err = client.ServiceClient().NewContainerClient(thumbsContainerName).NewBlockBlobClient(blobName).SetTags(ctx, tags, nil)
+	if err != nil {
+		Error.Printf("error setting tags: %s", err)
+	}
+
 	// resize main image
 	imgBytes, err := utils.ResizeImage(blob.Data, evt.Data.ContentType, blobName, mih, miw)
 	if err != nil {
@@ -155,6 +198,13 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	if err != nil {
 		Error.Printf("%s: error saving blob '%s': %v", serviceName, blobName, err)
 		return nil, err
+	}
+
+	tags["isThumb"] = "false"
+
+	_, err = client.ServiceClient().NewContainerClient(imagesContainerName).NewBlockBlobClient(blobName).SetTags(ctx, tags, nil)
+	if err != nil {
+		Error.Printf("error setting tags: %s", err)
 	}
 
 	return nil, nil
@@ -186,4 +236,34 @@ func setBlob(ctx context.Context, bindingName string, blobName string, blob []by
 	}
 
 	return out, nil
+}
+
+func SaveBlobWithMetadataAndTags(ctx context.Context, storageConfig models.StorageConfig, blobPrefix string, blobName string, blobBytes []byte, metadata map[string]string, tags map[string]string) (eTag *azcore.ETag, err error) {
+	url := fmt.Sprintf("https://%s.blob.core.windows.net/", storageConfig.StorageAccount)
+
+	credential, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		log.Fatal("Invalid credentials with error: " + err.Error())
+	}
+
+	client, err := azblob.NewClient(url, credential, nil)
+	if err != nil {
+		log.Fatal("Invalid credentials with error: " + err.Error())
+	}
+
+	// upload blob
+	blobPath := fmt.Sprintf("%s/%s", blobPrefix, blobName)
+	opt := azblob.UploadBufferOptions{
+		Metadata: metadata,
+		Tags:     tags,
+	}
+
+	resp, err := client.UploadBuffer(ctx, storageConfig.StorageContainer, blobPath, blobBytes, &opt)
+	if err != nil {
+		log.Fatal("Blob upload failed with error: " + err.Error())
+		return nil, err
+	}
+
+	Info.Printf("response: %x", resp)
+	return resp.ETag, nil
 }

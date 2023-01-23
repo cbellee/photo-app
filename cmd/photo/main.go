@@ -10,10 +10,10 @@ import (
 	"models"
 	"net/url"
 	"os"
-	"utils"
+	//"utils"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
-	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	//"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/http"
@@ -35,10 +35,6 @@ var dbConfig = models.DbConfig{
 	DbName:      os.Getenv("COSMOS_DB"),
 	DbKey:       os.Getenv("COSMOS_KEY"),
 	DbContainer: os.Getenv("COSMOS_CONTAINER"),
-}
-
-var storageConfig = models.StorageConfig{
-	StorgeURL: ,
 }
 
 func Init(
@@ -100,7 +96,7 @@ func main() {
 func getCollectionAlbumTags(ctx context.Context, in *common.InvocationEvent) (out *common.Content, err error) {
 	Info.Printf("%s - ContentType:%s, Verb:%s, QueryString:%s, Data:%+v", serviceName, in.ContentType, in.Verb, in.QueryString, string(in.Data))
 	
-	utils.GetBlobMetadata(&azblob.Client{}, containerName)
+	return // utils.GetBlobMetadata(&azblob.Client{}, "images", ctx)
 }
 
 func getCollections(ctx context.Context, in *common.InvocationEvent) (out *common.Content, err error) {

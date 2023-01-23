@@ -85,7 +85,7 @@ func UploadHandler(ctx context.Context, in *common.InvocationEvent) (out *common
 	Info.Printf("%s - ContentType:%s, Verb:%s, QueryString:%s, Data:%+v", serviceName, in.ContentType, in.Verb, in.QueryString, string(in.Data))
 
 	blob := models.Blob{}
-	err = json.Unmarshal(in.Data, blob)
+	err = json.Unmarshal(in.Data, &blob)
 	if err != nil {
 		Error.Fatalf("Error unmarshalling blob JSON")
 		return nil, err
@@ -109,7 +109,6 @@ func UploadHandler(ctx context.Context, in *common.InvocationEvent) (out *common
 
 func SaveBlob(ctx context.Context, storageConfig models.StorageConfig, blobPrefix string, blobName string, blobBytes []byte, metadata map[string]string, tags map[string]string) (eTag *azcore.ETag, err error) {
 	url := fmt.Sprintf("https://%s.blob.core.windows.net/", storageConfig.StorageAccount)
-	ctx = context.Background()
 
 	credential, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -134,6 +133,6 @@ func SaveBlob(ctx context.Context, storageConfig models.StorageConfig, blobPrefi
 		return nil, err
 	}
 
-	Info.Printf("response: %s", resp)
+	Info.Printf("response: %x", resp)
 	return resp.ETag, nil
 }

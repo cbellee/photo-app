@@ -3,7 +3,7 @@ import { useLocation, Link } from 'react-router-dom'
 import { getAlbumCollections } from '../photoService';
 import { useMsal } from "@azure/msal-react";
 import { makeStyles, withTheme } from '@mui/styles';
-import { Modal } from '@mui/material';
+import { Modal, Fade, Backdrop, linearProgressClasses } from '@mui/material';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
@@ -11,11 +11,11 @@ import ListSubheader from '@mui/material/ListSubheader';
 import IconButton from '@mui/material/IconButton';
 import { Info, NoEncryption } from '@mui/icons-material';
 import { getBlobsByTags } from '../photoService';
+import styled, { keyframes, css } from 'styled-components'
 
 const useStyles = makeStyles((theme) => ({
-  paper: {
+  modal: {
     maxWidth: '100%',
-    maxHeight: '100vh',
     margin: 'auto',
     position: "absolute",
     width: 'auto',
@@ -27,8 +27,11 @@ const useStyles = makeStyles((theme) => ({
       outline: 'white auto 0px',
     }
   },
+  modalOverlay: {
+    backgroundColor: 'black',
+  },
   image: {
-    maxHeight: '60em'
+    maxHeight: '40vw'
   },
   root: {
     display: 'flex',
@@ -104,7 +107,7 @@ export default function PhotoList() {
   }, [])
 
   const body = (
-    <div style={modalStyle} className={classes.paper}>
+    <div style={modalStyle} className={classes.modal}>
       {photoData[currentIdx] && (
         <img className={classes.image} src={photoData[currentIdx].tags.url} alt={photoData[currentIdx].name} onClick={() => handleScroll(currentIdx)} />
       )}
@@ -113,9 +116,6 @@ export default function PhotoList() {
 
   return (
     <div className={classes.root}>
-      {
-        console.log("photoData: " + photoData)
-      }
       <ImageList cellHeight={300} spacing={30} className={classes.imageList}>
         <ImageListItem key="Subheader" cols={4} style={{ height: 'auto' }}>
           <ListSubheader component="div"></ListSubheader>
@@ -125,7 +125,6 @@ export default function PhotoList() {
             <img
               src={photo.tags.thumbUrl}
               alt={photo.name}
-              className="small"
               onClick={() => handleOpen(idx)}
             />
             <ImageListItemBar
@@ -140,9 +139,17 @@ export default function PhotoList() {
           </ImageListItem>
         ))}
       </ImageList>
-      <Modal open={open} onClose={handleClose} onClick={() => handleScroll(currentIdx)}>
-        {body}
+      <Modal
+        open={open}
+        className={classes.modalOverlay}
+        onClose={handleClose}
+        onClick={() => handleScroll(currentIdx)}
+        center
+      >
+        <Fade in={open}>
+          {body}
+        </Fade>
       </Modal>
-    </div>
+    </div >
   );
 }
