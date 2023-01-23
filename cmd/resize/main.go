@@ -172,7 +172,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	Info.Printf("'thumbBytes' blob size: %s", fmt.Sprint(len(thumbBytes)))
 
 	// write thumbnail to blob storage
-	_, err = setBlob(ctx, thumbsContainerBinding, blobPath, thumbBytes, blob.Metadata["collection"], blob.Metadata["album"])
+	_, err = setBlob(ctx, thumbsContainerBinding, blobPath, thumbBytes, blob.Metadata["collection"], blob.Metadata["album"], evt.Data.ContentType)
 	if err != nil {
 		Error.Printf("%s: error saving blob: '%s': %v", serviceName, blobPath, err)
 		return nil, err
@@ -198,7 +198,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 
 	// write main image to blob storage
 	Info.Printf("'imgBytes' blob size: %s", fmt.Sprint(len(imgBytes)))
-	_, err = setBlob(ctx, imagesContainerBinding, blobPath, imgBytes, blob.Metadata["collection"], blob.Metadata["album"])
+	_, err = setBlob(ctx, imagesContainerBinding, blobPath, imgBytes, blob.Metadata["collection"], blob.Metadata["album"], evt.Data.ContentType)
 	if err != nil {
 		Error.Printf("%s: error saving blob '%s': %v", serviceName, blobPath, err)
 		return nil, err
@@ -214,7 +214,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	return nil, nil
 }
 
-func setBlob(ctx context.Context, bindingName string, blobName string, blob []byte, collection string, album string) (out *dapr.BindingEvent, err error) {
+func setBlob(ctx context.Context, bindingName string, blobName string, blob []byte, collection string, album string, contentType string) (out *dapr.BindingEvent, err error) {
 	client, err := dapr.NewClient()
 	if err != nil {
 		panic(err)
@@ -229,6 +229,7 @@ func setBlob(ctx context.Context, bindingName string, blobName string, blob []by
 			"includeMetadata": "true",
 			"collection":      collection,
 			"album":           album,
+			"ContentType":     contentType,
 		},
 	}
 
@@ -236,7 +237,7 @@ func setBlob(ctx context.Context, bindingName string, blobName string, blob []by
 
 	out, err = client.InvokeBinding(ctx, in)
 	if err != nil {
-		return out, fmt.Errorf("Error setBlob: %w", err)
+		return out, fmt.Errorf("error setBlob: %w", err)
 	}
 
 	return out, nil
