@@ -153,8 +153,8 @@ func getPhotos(ctx context.Context, in *common.InvocationEvent) (out *common.Con
 
 	options := azcosmos.QueryOptions{
 		QueryParameters: []azcosmos.QueryParameter{
-			{Name: "@collection", Value: q.Get("collection")},
-			{Name: "@album", Value: q.Get("album")},
+			{Name: "@collection", Value: q.Get("Collection")},
+			{Name: "@album", Value: q.Get("Album")},
 		},
 	}
 
