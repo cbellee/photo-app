@@ -18,7 +18,6 @@ import (
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 )
@@ -181,6 +180,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	// set tags
 	tags := blob.Metadata
 	tags["isThumb"] = "true"
+	tags["url"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "thumbs", path)
 	tags["name"] = path[len(path)-1]
 
 	Info.Printf("setting tags for blob: %s", blobPath)
@@ -205,6 +205,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	}
 
 	tags["isThumb"] = "false"
+	tags["url"] = fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", storageConfig.StorageAccount, "images", path)
 
 	_, err = client.ServiceClient().NewContainerClient(imagesContainerName).NewBlockBlobClient(blobPath).SetTags(ctx, tags, nil)
 	if err != nil {
@@ -241,34 +242,4 @@ func setBlob(ctx context.Context, bindingName string, blobName string, blob []by
 	}
 
 	return out, nil
-}
-
-func SaveBlobWithMetadataAndTags(ctx context.Context, storageConfig models.StorageConfig, blobPrefix string, blobName string, blobBytes []byte, metadata map[string]string, tags map[string]string) (eTag *azcore.ETag, err error) {
-	url := fmt.Sprintf("https://%s.blob.core.windows.net/", storageConfig.StorageAccount)
-
-	credential, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		log.Fatal("Invalid credentials with error: " + err.Error())
-	}
-
-	client, err := azblob.NewClient(url, credential, nil)
-	if err != nil {
-		log.Fatal("Invalid credentials with error: " + err.Error())
-	}
-
-	// upload blob
-	blobPath := fmt.Sprintf("%s/%s", blobPrefix, blobName)
-	opt := azblob.UploadBufferOptions{
-		Metadata: metadata,
-		Tags:     tags,
-	}
-
-	resp, err := client.UploadBuffer(ctx, storageConfig.StorageContainer, blobPath, blobBytes, &opt)
-	if err != nil {
-		log.Fatal("Blob upload failed with error: " + err.Error())
-		return nil, err
-	}
-
-	Info.Printf("response: %x", resp)
-	return resp.ETag, nil
 }
