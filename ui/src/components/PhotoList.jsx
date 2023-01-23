@@ -101,7 +101,7 @@ export default function PhotoList() {
     let collection = location.state.collection;
     let album = location.state.album;
 
-    getBlobsByTags("uploads", collection, album, true)
+    getBlobsByTags("thumbs", collection, album, true)
       .catch(error => console.log(error), (data = '[]') => console.log("data: " + data))
       .then((data) => setPhotoData(data));
   }, [])

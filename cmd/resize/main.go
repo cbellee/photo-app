@@ -172,7 +172,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	Info.Printf("'thumbBytes' blob size: %s", fmt.Sprint(len(thumbBytes)))
 
 	// write thumbnail to blob storage
-	_, err = setBlob(ctx, thumbsContainerBinding, blobPath, thumbBytes, blob.Metadata["collection"], blob.Metadata["album"])
+	_, err = setBlob(ctx, thumbsContainerBinding, blobPath, thumbBytes, blob.Metadata["Collection"], blob.Metadata["Album"])
 	if err != nil {
 		Error.Printf("%s: error saving blob: '%s': %v", serviceName, blobPath, err)
 		return nil, err
@@ -181,7 +181,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 	// set tags
 	tags := blob.Metadata
 	tags["isThumb"] = "true"
-	tags["name"] = path[len(path)-1]
+	tags["Name"] = path[len(path)-1]
 
 	Info.Printf("setting tags for blob: %s", blobPath)
 	_, err = client.ServiceClient().NewContainerClient(thumbsContainerName).NewBlockBlobClient(blobPath).SetTags(ctx, tags, nil)
@@ -198,7 +198,7 @@ func ResizeHandler(ctx context.Context, in *common.BindingEvent) (out []byte, er
 
 	// write main image to blob storage
 	Info.Printf("'imgBytes' blob size: %s", fmt.Sprint(len(imgBytes)))
-	_, err = setBlob(ctx, imagesContainerBinding, blobPath, imgBytes, blob.Metadata["collection"], blob.Metadata["album"])
+	_, err = setBlob(ctx, imagesContainerBinding, blobPath, imgBytes, blob.Metadata["Collection"], blob.Metadata["Album"])
 	if err != nil {
 		Error.Printf("%s: error saving blob '%s': %v", serviceName, blobPath, err)
 		return nil, err
@@ -227,8 +227,8 @@ func setBlob(ctx context.Context, bindingName string, blobName string, blob []by
 		Metadata: map[string]string{
 			"blobName":        blobName,
 			"includeMetadata": "true",
-			"collection":      collection,
-			"album":           album,
+			"Collection":      collection,
+			"Album":           album,
 		},
 	}
 
