@@ -36,9 +36,11 @@ Get-ChildItem $localPath -Directory | ForEach-Object {
             -Context $ctx `
             -Force
         }
-<#         azcopy copy "$($_.FullName)/*" "https://$storageAccountName.blob.core.windows.net/$containerName/$collection/$album" `
+        <# 
+        azcopy copy "$($_.FullName)/*" "https://$storageAccountName.blob.core.windows.net/$containerName/$collection/$album" `
         --blob-tags="collection=$collection&album=$album" `
-        --metadata "collection=$collection;album=$album;name=$($_.Name)" #>
+        --metadata "collection=$collection;album=$album;name=$($_.Name)" 
+        #>
     }
 }
 
