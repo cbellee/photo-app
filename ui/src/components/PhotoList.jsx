@@ -15,6 +15,7 @@ import styled, { keyframes, css } from 'styled-components'
 
 const useStyles = makeStyles((theme) => ({
   modal: {
+    maxWidth: '100%',
     margin: 'auto',
     position: "absolute",
     width: 'auto',
@@ -30,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'black',
   },
   image: {
-    
+    maxHeight: '80vh'
   },
   root: {
     display: 'flex',
