@@ -63,8 +63,5 @@ export const storageRequestScope = {
 
 export const apiConfig = {
     tenantId: "3d49be6f-6e38-404b-bbd4-f61c1a2d25bf",
-    storageApiEndpoint: "https://storaodiwusgqeyiu.blob.core.windows.net",
-    collectionApiEndpoint: "https://photo.orangecoast-f46e9cc8.australiaeast.azurecontainerapps.io/collections",
-    albumApiEndpoint: "https://photo.orangecoast-f46e9cc8.australiaeast.azurecontainerapps.io/albums",
-    photoApiEndpoint: "https://photo.orangecoast-f46e9cc8.australiaeast.azurecontainerapps.io/photos"
+    storageApiEndpoint: "https://storaodiwusgqeyiu.blob.core.windows.net"
 }

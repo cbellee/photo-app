@@ -20,16 +20,9 @@ export async function getBlobsByTags(containerName, collection, album, thumbsOnl
     let i = 1;
     let blobs = [];
 
-    const listOptions = {
-        includeMetadata: true,
-        includeSnapshots: false,
-        includeTags: true,
-        includeVersions: false
-    };
-
     let storageUrl = apiConfig.storageApiEndpoint
     let blobServiceClient = new BlobServiceClient(storageUrl, browserCredential)
-    for await (const blob of blobServiceClient.findBlobsByTags(tagQuery, listOptions)) {
+    for await (const blob of blobServiceClient.findBlobsByTags(tagQuery, options)) {
         let containerClient = blobServiceClient.getContainerClient(blob.containerName);
         let blockBlobClient = containerClient.getBlobClient(blob.name);
         let tags = (await blockBlobClient.getTags()).tags;
@@ -67,4 +60,28 @@ export async function getAlbumCollections(containerName) {
         }
     }
     return albumCollectionMap;
+}
+
+export async function getCollectionPhoto(containerName, collectionName) {
+    let tagQuery = `@container='${containerName}' AND collection='${collectionName}' AND isThumb='true'`;
+    let storageUrl = apiConfig.storageApiEndpoint
+    let blobServiceClient = new BlobServiceClient(storageUrl, browserCredential)
+
+    for await (const blob of blobServiceClient.findBlobsByTags(tagQuery, options)) {
+        let containerClient = blobServiceClient.getContainerClient(blob.containerName);
+        let blockBlobClient = containerClient.getBlobClient(blob.name);
+        return await blockBlobClient.url
+    }
+}
+
+export async function getAlbumPhoto(containerName, collectionName, albumName) {
+    let tagQuery = `@container='${containerName}' AND collection='${collectionName}' AND album='${albumName}' AND isAlbumThumb='true' AND isThumb='true'`;
+    let storageUrl = apiConfig.storageApiEndpoint
+    let blobServiceClient = new BlobServiceClient(storageUrl, browserCredential)
+
+    for await (const blob of blobServiceClient.findBlobsByTags(tagQuery, options)) {
+        let containerClient = blobServiceClient.getContainerClient(blob.containerName);
+        let blockBlobClient = containerClient.getBlobClient(blob.name);
+        return await blockBlobClient.url
+    }
 }

@@ -29,22 +29,39 @@ const resizeFile = (file, maxWidth, maxHeight, format, quality, rotation) =>
 export async function uploadAndSetTags(containerName, files, collection, album) {
     if (files.length > 0) {
         files.forEach(async (file) => {
-            var imageUrl = `${apiConfig.storageApiEndpoint}/${containerName}/${collection}/${album}/${file.file.name}`
-            var thumbUrl = `${apiConfig.storageApiEndpoint}/${containerName}/${collection}/${album}/thumbs/${file.file.name}`
+            // replace unsupported characters
+            let fileName = file.file.name.replace(/[^0-9a-zA-Z+-.:=_/]/g, '_');
+            let image = new Image();
+            image.src = file.file;
+
+            var imageUrl = `${apiConfig.storageApiEndpoint}/${containerName}/${collection}/${album}/${fileName}`
+            var thumbUrl = `${apiConfig.storageApiEndpoint}/thumbs/${collection}/${album}/${fileName}`
+
+            if (file.exif.MakerNote) {
+                file.exif.MakerNote = [];
+            }
 
             var metadata = {
-                exifData: file.exif
+                exifData: JSON.stringify(file.exif),
+                collection: collection,
+                album: album,
+                name: fileName,
+                originalFileName: file.file.name 
             }
 
             var tags = {
                 collection: collection,
                 album: album,
-                name: file.file.name,
+                name: fileName,
                 size: String(file.file.size),
                 url: imageUrl,
                 thumbUrl: thumbUrl,
-                isThumb: 'false'
+                isThumb: 'false',
+                isAlbumThumb: file.isAlbumThumb
             }
+
+            console.log("tags: " + JSON.stringify(tags));
+            console.log(`metadata: ${JSON.stringify(metadata)}`)
             
             // upload main image file
             let thumbBlockClient = new BlockBlobClient(imageUrl, browserCredential);
@@ -56,10 +73,17 @@ export async function uploadAndSetTags(containerName, files, collection, album) 
             tags.isThumb = 'true'
             const thumb = await resizeFile(file.file, 300, 300, "JPEG", 50, 0);
             let thumbFile = new File([thumb], file.file.name)
+
+            image = new Image();
+            image.src = thumb;
+
+            //tags.width = image.width;
+            //tags.height = image.height;
+
             let imageBlockClient = new BlockBlobClient(thumbUrl, browserCredential);
             await imageBlockClient.upload(thumbFile, thumbFile.size);
             await imageBlockClient.setTags(tags);
-
+            await imageBlockClient.setMetadata(metadata);
         })
     } else {
         console.log("no files found...")

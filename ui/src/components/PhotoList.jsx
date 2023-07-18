@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation, Link } from 'react-router-dom'
-import { getAlbumCollections } from '../photoService';
-import { useMsal } from "@azure/msal-react";
-import { makeStyles, withTheme } from '@mui/styles';
-import { Modal, Fade, Backdrop, linearProgressClasses } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import { Modal, Fade } from '@mui/material';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 import ListSubheader from '@mui/material/ListSubheader';
 import IconButton from '@mui/material/IconButton';
-import { Info, NoEncryption } from '@mui/icons-material';
+import { Info } from '@mui/icons-material';
 import { getBlobsByTags } from '../photoService';
-import styled, { keyframes, css } from 'styled-components'
+import { Typography } from '@mui/material';
 
 const useStyles = makeStyles((theme) => ({
   modal: {
@@ -49,9 +47,9 @@ const useStyles = makeStyles((theme) => ({
     }
   },
   imageTitleBar: {
-    display: 'none !important',
+    display: 'block',
     "&:hover": {
-      background: 'white',
+      background: 'red',
     }
   },
   icon: {
@@ -72,12 +70,15 @@ function getModalStyle() {
 
 export default function PhotoList() {
   const classes = useStyles();
-  const { instance, accounts } = useMsal();
   const [photoData, setPhotoData] = useState([]);
-  let location = useLocation();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
-  let [currentIdx, setCurrentIdx] = useState(null);
+  const [currentIdx, setCurrentIdx] = useState(null);
   const [modalStyle] = useState(getModalStyle);
+
+  const album = location.state?.album;
+  const albums = location.state?.albums;
+  const collection = location.state?.collection;
 
   const handleOpen = (idx) => {
     setCurrentIdx(idx);
@@ -98,59 +99,68 @@ export default function PhotoList() {
   };
 
   useEffect(() => {
-    let collection = location.state.collection;
-    let album = location.state.album;
-
     getBlobsByTags("thumbs", collection, album, true)
       .catch(error => console.log(error), (data = '[]') => console.log("data: " + data))
       .then((data) => setPhotoData(data));
-  }, [])
+  }, [album, collection])
 
   const body = (
     <div style={modalStyle} className={classes.modal}>
       {photoData[currentIdx] && (
-        <img className={classes.image} src={photoData[currentIdx].tags.imgUrl} alt={photoData[currentIdx].name} onClick={() => handleScroll(currentIdx)} />
+        <img className={classes.image} src={photoData[currentIdx].tags.url} alt={photoData[currentIdx].name} onClick={() => handleScroll(currentIdx)} />
       )}
     </div>
   );
 
   return (
-    <div className={classes.root}>
-      <ImageList cellHeight={300} spacing={30} className={classes.imageList}>
-        <ImageListItem key="Subheader" cols={4} style={{ height: 'auto' }}>
-          <ListSubheader component="div"></ListSubheader>
-        </ImageListItem>
-        {photoData.map((photo, idx) => (
-          <ImageListItem key={photo.tags.imgUrl} className={classes.imageItem}>
-            <img
-              //src={photo.tags.thumbUrl}
-              src={photo.tags.url}
-              alt={photo.name}
-              onClick={() => handleOpen(idx)}
-            />
-            <ImageListItemBar
-              className={classes.imageTitleBar}
-              title={photo.name}
-              actionIcon={
-                <IconButton aria-label={`info about ${photo.name}`} className={classes.icon}>
-                  <Info />
-                </IconButton>
-              }
-            />
-          </ImageListItem>
-        ))}
-      </ImageList>
-      <Modal
-        open={open}
-        className={classes.modalOverlay}
-        onClose={handleClose}
-        onClick={() => handleScroll(currentIdx)}
-        center
+    <>
+      <Typography>
+        Album: {album}
+      </Typography>
+      <Link
+        to={{
+          pathname: `/${collection}`
+        }}
+        state={{ collection: collection, albums: albums }}
       >
-        <Fade in={open}>
-          {body}
-        </Fade>
-      </Modal>
-    </div >
+        {`<< collections/${collection}/${album}`}
+      </Link>
+      <div className={classes.root}>
+        <ImageList spacing={30} className={classes.imageList}>
+          <ImageListItem key="Subheader" cols={4} style={{ height: 'auto' }}>
+            <ListSubheader component="div"></ListSubheader>
+          </ImageListItem>
+          {photoData.map((photo, idx) => (
+            <ImageListItem key={photo.tags.thumbUrl} className={classes.imageItem}>
+              <img
+                src={photo.tags.thumbUrl}
+                alt={photo.tags.name}
+                onClick={() => handleOpen(idx)}
+              />
+              <ImageListItemBar
+                className={classes.imageTitleBar}
+                title={photo.name}
+                actionIcon={
+                  <IconButton aria-label={`info about ${photo.tags.name}`} className={classes.icon}>
+                    <Info />
+                  </IconButton>
+                }
+              />
+            </ImageListItem>
+          ))}
+        </ImageList>
+        <Modal
+          open={open}
+          className={classes.modalOverlay}
+          onClose={handleClose}
+          onClick={() => handleScroll(currentIdx)}
+          center="true"
+        >
+          <Fade in={open}>
+            {body}
+          </Fade>
+        </Modal>
+      </div >
+    </>
   );
 }
