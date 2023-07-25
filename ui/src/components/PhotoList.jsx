@@ -8,7 +8,7 @@ import ImageListItemBar from '@mui/material/ImageListItemBar';
 import ListSubheader from '@mui/material/ListSubheader';
 import IconButton from '@mui/material/IconButton';
 import { Info } from '@mui/icons-material';
-import { getBlobsByTags } from '../photoService';
+import { getBlobsByTags } from '../services/photoService';
 import { Typography } from '@mui/material';
 
 const useStyles = makeStyles((theme) => ({

@@ -8,6 +8,24 @@
                 "costCenter": "123456789",
                 "dept": "it"
             }
+        },
+        "resizeApiName": {
+            "value": "resize"
+        },
+        "photoApiName": {
+            "value": "photo"
+        },
+        "storeApiName": {
+            "value": "store"
+        },
+        "resizeApiPort": {
+            "value": "443"
+        },
+        "photoApiPort": {
+            "value": "443"
+        },
+        "storeApiPort": {
+            "value": "443"
         }
     }
 }

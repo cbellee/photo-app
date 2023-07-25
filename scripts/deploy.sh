@@ -7,7 +7,7 @@ while getopts ":s" option; do
 done
 
 LOCATION='australiaeast'
-RG_NAME="photo-app-test-rg"
+RG_NAME="go-photo-app-rg"
 SEMVER='0.1.0'
 REV=$(git rev-parse --short HEAD)
 TAG="$SEMVER-$REV"
@@ -27,11 +27,15 @@ STORE_API_NAME="store"
 STORE_API_PORT="443"
 PHOTO_API_NAME="photo"
 PHOTO_API_PORT="443"
+UPLOAD_API_NAME="upload"
+UPLOAD_API_PORT="443"
+
 GRPC_MAX_REQUEST_SIZE_MB="30"
 
 RESIZE_API_IMAGE="$RESIZE_API_NAME:$TAG"
 STORE_API_IMAGE="$STORE_API_NAME:$TAG"
 PHOTO_API_IMAGE="$PHOTO_API_NAME:$TAG"
+UPLOAD_API_IMAGE="$UPLOAD_API_NAME:$TAG"
 
 UPLOADS_QUEUE_NAME='uploads'
 IMAGES_QUEUE_NAME='images'
@@ -63,27 +67,51 @@ ACR_NAME=$(az deployment group show --resource-group $RG_NAME --name 'acr-deploy
 if [[ $skipBuild != 1 ]]; then
 
 	cd ..
-	echo "IMAGE TAG: '$ACR_NAME.azurecr.io/$RESIZE_API_IMAGE'"
 
 	# build image in ACR
 	az acr login -n $ACR_NAME 
 
+	# resize API
+	echo "Building image - TAG: '$ACR_NAME.azurecr.io/$RESIZE_API_IMAGE'"
 	docker build -t "$ACR_NAME.azurecr.io/$RESIZE_API_IMAGE" \
 	--build-arg SERVICE_NAME=$RESIZE_API_NAME \
 	--build-arg SERVICE_PORT=$RESIZE_API_PORT \
 	-f ./Dockerfile .
 
+	echo "Pushing image - TAG: '$ACR_NAME.azurecr.io/$PHOTO_API_IMAGE'"
 	docker push "$ACR_NAME.azurecr.io/$RESIZE_API_IMAGE"
 
-':
-	az acr build -r $ACR_NAME \
-		-t $RESIZE_API_IMAGE \
-		--build-arg SERVICE_NAME=$RESIZE_API_NAME \
-		--build-arg SERVICE_PORT=$RESIZE_API_PORT \
-		-f ./Dockerfile .
-'
+	# photo API
+	echo "Building image - TAG: '$ACR_NAME.azurecr.io/$PHOTO_API_IMAGE'"
+	docker build -t "$ACR_NAME.azurecr.io/$PHOTO_API_IMAGE" \
+	--build-arg SERVICE_NAME=$PHOTO_API_NAME \
+	--build-arg SERVICE_PORT=$PHOTO_API_PORT \
+	-f ./Dockerfile .
 
-		cd ./scripts
+	echo "Pushing image - TAG: '$ACR_NAME.azurecr.io/$PHOTO_API_IMAGE'"
+	docker push "$ACR_NAME.azurecr.io/$PHOTO_API_IMAGE"
+
+	# upload API
+	echo "Building image - TAG: '$ACR_NAME.azurecr.io/$UPLOAD_API_IMAGE'"
+	docker build -t "$ACR_NAME.azurecr.io/$UPLOAD_API_IMAGE" \
+	--build-arg SERVICE_NAME=$UPLOAD_API_NAME \
+	--build-arg SERVICE_PORT=$UPLOAD_API_PORT \
+	-f ./Dockerfile .
+
+    echo "Pushing image - TAG: '$ACR_NAME.azurecr.io/$UPLOAD_API_IMAGE'"
+	docker push "$ACR_NAME.azurecr.io/$UPLOAD_API_IMAGE"
+
+	# store API
+	echo "Building image - TAG: '$ACR_NAME.azurecr.io/$STORE_API_IMAGE'"
+	docker build -t "$ACR_NAME.azurecr.io/$STORE_API_IMAGE" \
+	--build-arg SERVICE_NAME=$STORE_API_NAME \
+	--build-arg SERVICE_PORT=$STORE_API_PORT \
+	-f ./Dockerfile .
+
+    echo "Pushing image - TAG: '$ACR_NAME.azurecr.io/$STORE_API_IMAGE'"
+	docker push "$ACR_NAME.azurecr.io/$STORE_API_IMAGE"
+
+	cd ./scripts
 fi
 
 az deployment group create \
@@ -92,11 +120,10 @@ az deployment group create \
 --template-file ../infra/main.bicep \
 --parameters ../infra/main.parameters.json \
 --parameters location=$LOCATION \
---parameters resizeApiName=$RESIZE_API_NAME \
---parameters resizeApiPort=$RESIZE_API_PORT \
 --parameters tag=$TAG \
 --parameters acrName=$ACR_NAME \
 --parameters uploadsStorageQueueName=$UPLOADS_QUEUE_NAME \
+--parameters imagesStorageQueueName=$IMAGES_QUEUE_NAME \
 --parameters thumbsContainerName=$THUMBS_CONTAINER_NAME \
 --parameters imagesContainerName=$IMAGES_CONTAINER_NAME \
 --parameters uploadsContainerName=$UPLOADS_CONTAINER_NAME \
@@ -104,4 +131,7 @@ az deployment group create \
 --parameters maxThumbWidth=$MAX_THUMB_WIDTH \
 --parameters maxImageHeight=$MAX_IMAGE_HEIGHT \
 --parameters maxImageWidth=$MAX_IMAGE_WIDTH \
---parameters grpcMaxRequestSizeMb=$GRPC_MAX_REQUEST_SIZE_MB
+--parameters grpcMaxRequestSizeMb=$GRPC_MAX_REQUEST_SIZE_MB \
+--parameters containerName=$COSMOSDB_CONTAINER_NAME \
+--parameters databaseName=$COSMOSDB_NAME \
+--parameters partitionKey=$COSMOSDB_PARTITION_KEY

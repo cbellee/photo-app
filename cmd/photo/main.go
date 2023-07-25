@@ -13,8 +13,7 @@ import (
 	//"utils"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
-	//"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
-
+	
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/http"
 )

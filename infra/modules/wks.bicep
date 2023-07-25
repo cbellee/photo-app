@@ -5,9 +5,11 @@ param retentionInDays int = 30
 
 @allowed([
   'Standard'
+  'Free'
+  'Premium'
   'PerGB2018'
 ])
-param sku string = 'Standard'
+param sku string = 'PerGB2018'
 
 resource wks 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
   location: location

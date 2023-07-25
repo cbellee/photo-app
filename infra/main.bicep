@@ -4,22 +4,20 @@ param tag string
 
 param resizeApiName string
 param resizeApiPort string
-
-// param storeApiName string
-// param storeApiPort string
-
-// param photoApiName string
-// param photoApiPort string
+param storeApiName string
+param storeApiPort string
+param photoApiName string
+param photoApiPort string
 
 param uploadsStorageQueueName string
-// param imagesStorageQueueName string
+param imagesStorageQueueName string
 param thumbsContainerName string
 param imagesContainerName string
 param uploadsContainerName string
 
-// param databaseName string
-// param containerName string
-// param partitionKey string
+param databaseName string
+param containerName string
+param partitionKey string
 
 param maxThumbHeight string
 param maxThumbWidth string
@@ -36,13 +34,31 @@ param tags object = {
 var affix = uniqueString(resourceGroup().id)
 var containerAppEnvName = 'app-env-${affix}'
 var resizeApiContainerImage = '${acr.properties.loginServer}/${resizeApiName}:${tag}'
+var storeApiContainerImage = '${acr.properties.loginServer}/${storeApiName}:${tag}'
+var photoApiContainerImage = '${acr.properties.loginServer}/${photoApiName}:${tag}'
 var storageBlobDataOwnerRoleDefinitionID = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
+var acrPullRoleDefinitionId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 var storageQueueCxnString = 'DefaultEndpointsProtocol=https;AccountName=${storModule.outputs.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storModule.outputs.key}'
 var acrLoginServer = '${acrName}.azurecr.io'
-var acrAdminPassword = listCredentials(acr.id, '2021-12-01-preview').passwords[0].value
 var workspaceName = 'wks-${affix}'
 var storageAccountName = 'stor${affix}'
 var aiName = 'ai-${affix}'
+var acrPullUmidName = 'acrpull-umid-${affix}'
+
+resource umid 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  location: location
+  name: acrPullUmidName
+  tags: tags
+}
+
+module acrPullRole 'modules/acrpull-rbac.bicep' = {
+  name: 'module-acrpull-rbac'
+  params: {
+    acrName: acrName
+    principalId: umid.properties.principalId
+    roleDefinitionID: acrPullRoleDefinitionId
+  }
+}
 
 module aiModule 'modules/ai.bicep' = {
   name: 'module-ai'
@@ -83,15 +99,12 @@ module storModule 'modules/stor.bicep' = {
         name: uploadsContainerName
         publicAccess: 'None'
       }
-      /*       thumbsContainerName
-      imagesContainerName
-      uploadsContainerName */
     ]
     tags: tags
   }
 }
 
-/* module cosmosModule 'modules/cosmos.bicep' = {
+module cosmosModule 'modules/cosmos.bicep' = {
   name: 'module-cosmos'
   params: {
     location: location
@@ -100,7 +113,7 @@ module storModule 'modules/stor.bicep' = {
     partitionKey: partitionKey
     databaseName: databaseName
   }
-} */
+}
 
 module eventGridModule 'modules/eventgrid.bicep' = {
   name: 'module-evg'
@@ -134,12 +147,15 @@ module containerAppEnvModule './modules/cappenv.bicep' = {
   }
 }
 
-resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
+resource resizeApi 'Microsoft.App/containerApps@2023-04-01-preview' = {
   name: resizeApiName
   location: location
   tags: tags
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${umid.id}': {}
+    }
   }
   dependsOn: [
     containerAppEnvModule
@@ -158,19 +174,14 @@ resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
       }
       secrets: [
         {
-          name: 'registry-password'
-          value: acrAdminPassword
-        }
-        {
           name: 'storage-queue-cxn'
           value: storageQueueCxnString
         }
       ]
       registries: [
         {
-          passwordSecretRef: 'registry-password'
           server: acrLoginServer
-          username: acr.name
+          identity: umid.id
         }
       ]
       ingress: {
@@ -272,19 +283,22 @@ resource resizeApi 'Microsoft.App/containerApps@2022-06-01-preview' = {
 
 // grant resize container app System Managed Identity 'Storage Blob Data Owner' permission on the storage account
 module rbacBlobPermission 'modules/rbac.bicep' = {
-  name: 'module-rbac'
+  name: 'module-blob-rbac'
   params: {
-    principalId: resizeApi.identity.principalId
+    principalId: umid.properties.principalId
     roleDefinitionID: storageBlobDataOwnerRoleDefinitionID
   }
 }
 
-/* resource storeApi 'Microsoft.App/containerApps@2022-10-01' = {
+resource storeApi 'Microsoft.App/containerApps@2023-04-01-preview' = {
   name: storeApiName
   location: location
   tags: tags
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${umid.id}': {}
+    }
   }
   dependsOn: [
     containerAppEnvModule
@@ -300,12 +314,16 @@ module rbacBlobPermission 'modules/rbac.bicep' = {
         enabled: true
         httpMaxRequestSize: grpcMaxRequestSizeMb
       }
-      secrets: secrets
+      secrets: [
+        {
+          name: 'storage-queue-cxn'
+          value: storageQueueCxnString
+        }
+      ]
       registries: [
         {
-          passwordSecretRef: 'registry-password'
           server: acrLoginServer
-          username: acr.name
+          identity: umid.id
         }
       ]
       ingress: {
@@ -375,7 +393,10 @@ resource photoApi 'Microsoft.App/containerApps@2022-10-01' = {
   location: location
   tags: tags
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${umid.id}': {}
+    }
   }
   dependsOn: [
     containerAppEnvModule
@@ -391,12 +412,16 @@ resource photoApi 'Microsoft.App/containerApps@2022-10-01' = {
         enabled: true
         httpMaxRequestSize: grpcMaxRequestSizeMb
       }
-      secrets: secrets
+      secrets: [
+        {
+          name: 'storage-queue-cxn'
+          value: storageQueueCxnString
+        }
+      ]
       registries: [
         {
-          passwordSecretRef: 'registry-password'
           server: acrLoginServer
-          username: acr.name
+          identity: umid.id
         }
       ]
       ingress: {
@@ -424,7 +449,7 @@ resource photoApi 'Microsoft.App/containerApps@2022-10-01' = {
             '*'
           ]
           allowCredentials: true
-       }
+        }
       }
     }
     managedEnvironmentId: containerAppEnvModule.outputs.id
@@ -475,7 +500,7 @@ resource photoApi 'Microsoft.App/containerApps@2022-10-01' = {
       }
     }
   }
-} */
+}
 
 resource uploadsStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
   dependsOn: [
@@ -507,7 +532,7 @@ resource uploadsStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/dap
   }
 }
 
-/* resource imagesStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
+resource imagesStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
   dependsOn: [
     containerAppEnvModule
   ]
@@ -536,7 +561,6 @@ resource uploadsStorageQueueDaprComponent 'Microsoft.App/managedEnvironments/dap
     ]
   }
 }
- */
 
 resource uploadsStorageDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
   dependsOn: [
@@ -628,7 +652,7 @@ resource imagesStorageDaprComponent 'Microsoft.App/managedEnvironments/daprCompo
   }
 }
 
-/* resource cosmosDbDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
+resource cosmosDbDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-06-01-preview' = {
   dependsOn: [
     containerAppEnvModule
   ]
@@ -661,7 +685,7 @@ resource imagesStorageDaprComponent 'Microsoft.App/managedEnvironments/daprCompo
       photoApiName
     ]
   }
-} */
+}
 
 output resizeUrl string = resizeApi.properties.configuration.ingress.fqdn
 output storageAccount string = storModule.outputs.name

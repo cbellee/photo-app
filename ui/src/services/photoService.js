@@ -1,4 +1,4 @@
-import { apiConfig, msalConfig } from "./authConfig";
+import { apiConfig, msalConfig } from "../authConfig";
 import { InteractiveBrowserCredential } from "@azure/identity"
 import { BlobClient, BlobServiceClient, BlockBlobClient } from "@azure/storage-blob"
 

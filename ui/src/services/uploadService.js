@@ -1,4 +1,4 @@
-import { apiConfig, msalConfig } from "./authConfig";
+import { apiConfig, msalConfig } from "../authConfig";
 import { InteractiveBrowserCredential } from "@azure/identity"
 import { BlockBlobClient } from "@azure/storage-blob"
 import Resizer from "react-image-file-resizer";
@@ -46,7 +46,7 @@ export async function uploadAndSetTags(containerName, files, collection, album) 
                 collection: collection,
                 album: album,
                 name: fileName,
-                originalFileName: file.file.name 
+                originalFileName: file.file.name
             }
 
             var tags = {
@@ -62,7 +62,7 @@ export async function uploadAndSetTags(containerName, files, collection, album) 
 
             console.log("tags: " + JSON.stringify(tags));
             console.log(`metadata: ${JSON.stringify(metadata)}`)
-            
+
             // upload main image file
             let thumbBlockClient = new BlockBlobClient(imageUrl, browserCredential);
             await thumbBlockClient.upload(file.file, file.file.size);

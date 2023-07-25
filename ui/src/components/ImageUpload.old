@@ -9,8 +9,8 @@ import IconButton from '@mui/material/IconButton';
 import { Info } from '@mui/icons-material';
 import { InputLabel, RadioGroup, FormControlLabel, Radio, FormControl } from '@mui/material';
 import CreatableSelect from 'react-select/creatable';
-import { uploadAndSetTags } from '../uploadService.js'
-import { storageRequestScope } from '../authConfig'
+import { uploadAndSetTags } from '../services/uploadService.js'
+import { storageRequestScope } from '../authConfig.js'
 import Resizer from "react-image-file-resizer";
 import EXIF from "exif-js";
 import { getAlbumCollections } from "../photoService.js";

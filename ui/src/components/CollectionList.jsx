@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { getAlbumCollections, getCollectionPhoto } from '../photoService';
+import { getAlbumCollections, getCollectionPhoto } from '../services/photoService';
 import { Link } from 'react-router-dom';
 import { Typography } from '@mui/material';
 

@@ -2,7 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import CollectionList from './CollectionList';
 import AlbumList from './AlbumList';
 import PhotoList from './PhotoList';
-import { ImageUpload } from './ImageUpload';
+import { ImageUpload, UploadBlob } from './UploadBlob';
 
 function Pages() {
     return (
@@ -10,7 +10,7 @@ function Pages() {
             <Route path="/" element={<CollectionList />} />
             <Route path="/:collection" element={<AlbumList />} />
             <Route path="/:collection/:album" element={<PhotoList />} />
-            <Route path="/uploads" element={<ImageUpload />} />
+            <Route path="/uploads" element={<UploadBlob />} />
         </Routes>
     );
 }
